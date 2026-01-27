@@ -106,12 +106,12 @@ class Akinator(loader.Module):
 		self.games = {}
 
 	@loader.command(
-			ru_doc="- начать игру",
-			ua_doc="- почати гру",
-			de_doc="- Spiel starten",
+			ru_doc="- начать игру.",
+			ua_doc="- почати гру.",
+			de_doc="- Spiel starten.",
 	)
 	async def akinator(self, message):
-		"""- start the game"""
+		"""- start the game."""
 
 		try:
 			aki = akinator.AsyncAkinator()
