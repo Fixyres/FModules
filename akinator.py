@@ -13,6 +13,8 @@ __version__ = (1, 0, 0)
 # meta pic: https://raw.githubusercontent.com/Fixyres/FModules/refs/heads/main/assets/akinator/pic.png
 # meta developer: @FModules
 
+# requires: akinator
+
 import akinator
 import deep_translator
 
