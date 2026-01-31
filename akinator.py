@@ -1,4 +1,4 @@
-__version__ = (1, 0, 0)
+__version__ = (1, 0, 1)
 
 # ©️ Fixyres, 2026
 # 🌐 https://github.com/Fixyres/FModules
@@ -13,7 +13,7 @@ __version__ = (1, 0, 0)
 # meta pic: https://raw.githubusercontent.com/Fixyres/FModules/refs/heads/main/assets/akinator/pic.png
 # meta developer: @FModules
 
-# requires: akinator
+# requires: akinator, deep_translator
 
 import akinator
 import deep_translator
@@ -38,6 +38,7 @@ class Akinator(loader.Module):
         "probably": "Probably",
         "probably_not": "Probably not",
         "this_is": "<b>This is <code>{name}</code>\n<code>{description}</code></b>",
+        "this_is_no_desc": "<b>This is <code>{name}</code></b>",
         "not_right": "Not right",
         "error": "<b>An error occurred, please try again.</b>",
         "failed": "<b>Failed to guess the character.</b>",
@@ -55,6 +56,7 @@ class Akinator(loader.Module):
         "probably": "Возможно",
         "probably_not": "Скорее нет",
         "this_is": "<b>Это <code>{name}</code>\n<code>{description}</code></b>",
+        "this_is_no_desc": "<b>Это <code>{name}</code></b>",
         "not_right": "Это не он",
         "error": "<b>Произошла ошибка, попробуйте снова.</b>",
         "failed": "<b>Не удалось угадать персонажа.</b>",
@@ -72,6 +74,7 @@ class Akinator(loader.Module):
         "probably": "Можливо",
         "probably_not": "Швидше ні",
         "this_is": "<b>Це <code>{name}</code>\n<code>{description}</code></b>",
+        "this_is_no_desc": "<b>Це <code>{name}</code></b>",
         "not_right": "Це не він",
         "error": "<b>Сталася помилка, спробуйте знову.</b>",
         "failed": "<b>Не вдалося вгадати персонажа.</b>",
@@ -89,9 +92,91 @@ class Akinator(loader.Module):
         "probably": "Wahrscheinlich",
         "probably_not": "Wahrscheinlich nicht",
         "this_is": "<b>Das ist <code>{name}</code>\n<code>{description}</code></b>",
+        "this_is_no_desc": "<b>Das ist <code>{name}</code></b>",
         "not_right": "Das ist er nicht",
         "error": "<b>Ein Fehler ist aufgetreten, bitte versuchen Sie es erneut.</b>",
         "failed": "<b>Charakter konnte nicht erraten werden.</b>",
+    }
+
+    strings_fr = {
+        "lang": "fr",
+        "_cls_doc": "Akinator devinera n'importe quel personnage auquel vous pensez, il vous suffit de répondre à quelques questions.",
+        "child_mode": "Mode enfant. Si activé, il sera plus difficile de deviner les héros 18+",
+        "start": "Commencer",
+        "text": "<b>Pensez à un personnage réel ou fictif et cliquez sur Commencer.</b>",
+        "yes": "Oui",
+        "no": "Non",
+        "idk": "Je ne sais pas",
+        "probably": "Probablement",
+        "probably_not": "Probablement pas",
+        "this_is": "<b>C'est <code>{name}</code>\n<code>{description}</code></b>",
+        "this_is_no_desc": "<b>C'est <code>{name}</code></b>",
+        "not_right": "Ce n'est pas lui",
+        "error": "<b>Une erreur s'est produite, veuillez réessayer.</b>",
+        "failed": "<b>Impossible de deviner le personnage.</b>",
+    }
+
+    strings_jp = {
+        "lang": "ja",
+        "_cls_doc": "アキネーターはあなたが考えているキャラクターを当てます。いくつかの質問に答えるだけです。",
+        "child_mode": "子供モード。有効にすると、18+のヒーローを推測するのが難しくなります",
+        "start": "開始",
+        "text": "<b>実在または架空のキャラクターを思い浮かべて、開始ボタンをクリックしてください。</b>",
+        "yes": "はい",
+        "no": "いいえ",
+        "idk": "わかりません",
+        "probably": "おそらく",
+        "probably_not": "おそらく違う",
+        "this_is": "<b>これは <code>{name}</code>\n<code>{description}</code></b>",
+        "this_is_no_desc": "<b>これは <code>{name}</code></b>",
+        "not_right": "違います",
+        "error": "<b>エラーが発生しました。もう一度お試しください。</b>",
+        "failed": "<b>キャラクターを推測できませんでした。</b>",
+    }
+
+    strings_uz = {
+        "lang": "uz",
+        "_cls_doc": "Akinator siz o'ylagan har qanday qahramonni topadi, faqat bir nechta savollarga javob bering.",
+        "child_mode": "Bolalar rejimi. Yoqilgan bo'lsa, 18+ qahramonlarni topish qiyinroq bo'ladi",
+        "start": "Boshlash",
+        "text": "<b>Haqiqiy yoki xayoliy qahramonni o'ylang va Boshlash tugmasini bosing.</b>",
+        "yes": "Ha",
+        "no": "Yo'q",
+        "idk": "Bilmayman",
+        "probably": "Ehtimol",
+        "probably_not": "Ehtimol yo'q",
+        "this_is": "<b>Bu <code>{name}</code>\n<code>{description}</code></b>",
+        "this_is_no_desc": "<b>Bu <code>{name}</code></b>",
+        "not_right": "Bu u emas",
+        "error": "<b>Xatolik yuz berdi, qaytadan urinib ko'ring.</b>",
+        "failed": "<b>Qahramonni topib bo'lmadi.</b>",
+    }
+
+    strings_kz = {
+        "lang": "kk",
+        "_cls_doc": "Акинатор сіз ойлаған кез келген кейіпкерді табады, тек бірнеше сұрақтарға жауап беріңіз.",
+        "child_mode": "Балалар режимі. Қосылған болса, 18+ кейіпкерлерді табу қиынырақ болады",
+        "start": "Бастау",
+        "text": "<b>Нақты немесе ойдан шығарылған кейіпкерді ойлаңыз және Бастау түймесін басыңыз.</b>",
+        "yes": "Иә",
+        "no": "Жоқ",
+        "idk": "Білмеймін",
+        "probably": "Мүмкін",
+        "probably_not": "Мүмкін емес",
+        "this_is": "<b>Бұл <code>{name}</code>\n<code>{description}</code></b>",
+        "this_is_no_desc": "<b>Бұл <code>{name}</code></b>",
+        "not_right": "Бұл ол емес",
+        "error": "<b>Қате орын алды, қайталап көріңіз.</b>",
+        "failed": "<b>Кейіпкерді таба алмадық.</b>",
+    }
+
+    suplang = {
+        "en": "english",
+        "de": "german",
+        "fr": "french",
+        "jp": "japanese",
+        "ru": "russian",
+        "uk": "russian"
     }
 
     def __init__(self):
@@ -108,21 +193,25 @@ class Akinator(loader.Module):
         self.games = {}
 
     @loader.command(
-            ru_doc="- начать игру.",
-            ua_doc="- почати гру.",
-            de_doc="- Spiel starten.",
+        ru_doc="- начать игру.",
+        ua_doc="- почати гру.",
+        de_doc="- Spiel starten.",
+        fr_doc="- commencer le jeu.",
+        jp_doc="- ゲームを開始します。",
+        uz_doc="- o'yinni boshlash.",
+        kz_doc="- ойынды бастау.",
     )
     async def akinator(self, message):
         """- start the game."""
-
         try:
             aki = akinator.AsyncAkinator()
             
-            lang = self.strings("lang")
+            user_lang = self.strings("lang")
+            aki_lang = self.suplang.get(user_lang, "english")
             
-            await aki.start_game(language=lang, child_mode=self.config["child_mode"])
+            await aki.start_game(language=aki_lang, child_mode=self.config["child_mode"])
             
-            self.games.update({message.chat_id: {message.id: aki}})
+            self.games.update({message.chat_id: {message.id: {"aki": aki, "user_lang": user_lang, "aki_lang": aki_lang}}})
 
             await self.inline.form(
                 message=message,
@@ -148,9 +237,12 @@ class Akinator(loader.Module):
             )
             return
 
-        aki = self.games[chat_id][mid]
+        game_data = self.games[chat_id][mid]
+        aki = game_data["aki"]
+        user_lang = game_data["user_lang"]
+        aki_lang = game_data["aki_lang"]
         
-        text = await self._translate(aki.question)
+        text = await self._translate(aki.question, user_lang, aki_lang)
         await self._show_question(call, text, message)
 
     async def _show_question(self, call: InlineCall, text: str, message):
@@ -190,32 +282,43 @@ class Akinator(loader.Module):
             ]
         )
 
-    async def _translate(self, text):
+    async def _translate(self, text, user_lang, aki_lang):
         if not text or not isinstance(text, str) or len(text.strip()) == 0:
             return text or ""
         
+        if user_lang == aki_lang or aki_lang == self.suplang.get(user_lang):
+            return text
+        
         try:
-            target_lang = self.strings("lang")
-            
             if len(text) > 5000:
                 text = text[:5000]
             
             translated = deep_translator.GoogleTranslator(
                 source="auto", 
-                target=target_lang
+                target=user_lang
             ).translate(text)
             return translated
         except Exception:
             return text
 
     async def _show_guess(self, call: InlineCall, aki, message):
+        chat_id = int(message.chat_id)
+        mid = int(message.id)
+        
+        game_data = self.games[chat_id][mid]
+        user_lang = game_data["user_lang"]
+        aki_lang = game_data["aki_lang"]
+        
         name = getattr(aki, 'name_proposition', None) or "Unknown"
         description = getattr(aki, 'description_proposition', None) or ""
         picture = getattr(aki, 'photo', None) or "https://raw.githubusercontent.com/Fixyres/FModules/refs/heads/main/assets/akinator/banner.png"
         
-        description_translated = await self._translate(description) if description else ""
+        if description and description.strip():
+            description_translated = await self._translate(description, user_lang, aki_lang)
+            text = self.strings("this_is").format(name=name, description=description_translated)
+        else:
+            text = self.strings("this_is_no_desc").format(name=name)
         
-        text = self.strings("this_is").format(name=name, description=description_translated)
         await call.edit(
             text, 
             photo=picture,
@@ -266,7 +369,10 @@ class Akinator(loader.Module):
                 )
                 return
             
-            aki = self.games[chat_id][mid]
+            game_data = self.games[chat_id][mid]
+            aki = game_data["aki"]
+            user_lang = game_data["user_lang"]
+            aki_lang = game_data["aki_lang"]
             
             try:
                 await aki.exclude()
@@ -278,7 +384,7 @@ class Akinator(loader.Module):
                 await self.finish_game(call, message, False, "", "")
                 return
             
-            text = await self._translate(aki.question)
+            text = await self._translate(aki.question, user_lang, aki_lang)
             await self._show_question(call, text, message)
             
         except Exception as e:
@@ -306,7 +412,10 @@ class Akinator(loader.Module):
                 )
                 return
             
-            aki = self.games[chat_id][mid]
+            game_data = self.games[chat_id][mid]
+            aki = game_data["aki"]
+            user_lang = game_data["user_lang"]
+            aki_lang = game_data["aki_lang"]
             
             try:
                 await aki.answer(args)
@@ -326,7 +435,7 @@ class Akinator(loader.Module):
             if aki.finished or has_guess:
                 await self._show_guess(call, aki, message)
             else:
-                text = await self._translate(aki.question)
+                text = await self._translate(aki.question, user_lang, aki_lang)
                 await self._show_question(call, text, message)
                 
         except akinator.CantGoBackAnyFurther:
@@ -340,4 +449,4 @@ class Akinator(loader.Module):
                 text=self.strings("error") + f"\n<code>{str(e)}</code>",
                 photo="https://raw.githubusercontent.com/Fixyres/FModules/refs/heads/main/assets/akinator/idk.png",
                 reply_markup=[]
-            )
+        )
