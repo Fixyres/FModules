@@ -175,8 +175,7 @@ class Akinator(loader.Module):
         "de": "german",
         "fr": "french",
         "jp": "japanese",
-        "ru": "russian",
-        "uk": "russian"
+        "ru": "russian"
     }
 
     def __init__(self):
