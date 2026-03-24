@@ -334,12 +334,7 @@ class FHeta(loader.Module):
             "placeholder": '<tg-emoji emoji-id="5204046675236109418">🗒️</tg-emoji>',
             "module": '<tg-emoji emoji-id="5197708768091061888">🎁</tg-emoji>',
             "channel": '<tg-emoji emoji-id="5278256077954105203">📢</tg-emoji>',
-            "removed": "🗑️",
-            "modules_list": '<tg-emoji emoji-id="5345935030143196497">🎄</tg-emoji>',
-            "notify_success": "🎁",
-            "notify_error": "🧊",
-            "notify_overwrite": "🌨️",
-            "notify_requirements": "🧊"
+            "modules_list": '<tg-emoji emoji-id="5345935030143196497">🎄</tg-emoji>'
         },
         "summer": {
             "search": '<tg-emoji emoji-id="5188217332748527444">🔍</tg-emoji>',
@@ -882,7 +877,7 @@ class FHeta(loader.Module):
                     try:
                         await call.answer(
                             self.strings["success"],
-                            show_alert=False
+                            show_alert=True
                         )
                     except:
                         pass
