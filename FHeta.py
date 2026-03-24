@@ -1,4 +1,4 @@
-__version__ = (9, 3, 6)
+__version__ = (9, 3, 7)
 
 # meta developer: @FModules
 # meta pic: https://raw.githubusercontent.com/Fixyres/FModules/refs/heads/main/assets/FHeta/logo.png
@@ -321,12 +321,7 @@ class FHeta(loader.Module):
             "description": '<tg-emoji emoji-id="5334882760735598374">📝</tg-emoji>',
             "command": '<tg-emoji emoji-id="5341715473882955310">⚙️</tg-emoji>',
             "placeholder": '<tg-emoji emoji-id="5359785904535774578">🗒️</tg-emoji>',
-            "like": "👍",
-            "dislike": "👎",
-            "prev": "◀️",
-            "next": "▶️",
             "module": '<tg-emoji emoji-id="5454112830989025752">📦</tg-emoji>',
-            "close": "❌",
             "channel": '<tg-emoji emoji-id="5278256077954105203">📢</tg-emoji>',
             "removed": "🗑️",
             "modules_list": '<tg-emoji emoji-id="5197269100878907942">📋</tg-emoji>',
@@ -342,12 +337,7 @@ class FHeta(loader.Module):
             "description": '<tg-emoji emoji-id="5255850496291259327">📜</tg-emoji>',
             "command": '<tg-emoji emoji-id="5199503707938505333">🎅</tg-emoji>',
             "placeholder": '<tg-emoji emoji-id="5204046675236109418">🗒️</tg-emoji>',
-            "like": "☕",
-            "dislike": "🥶",
-            "prev": "⏮️",
-            "next": "⏭️",
             "module": '<tg-emoji emoji-id="5197708768091061888">🎁</tg-emoji>',
-            "close": "❌",
             "channel": '<tg-emoji emoji-id="5278256077954105203">📢</tg-emoji>',
             "removed": "🗑️",
             "modules_list": '<tg-emoji emoji-id="5345935030143196497">🎄</tg-emoji>',
@@ -363,12 +353,7 @@ class FHeta(loader.Module):
             "description": '<tg-emoji emoji-id="5361684086807076580">🍹</tg-emoji>',
             "command": '<tg-emoji emoji-id="5442644589703866634">🏄</tg-emoji>',
             "placeholder": '<tg-emoji emoji-id="5434121252874756456">🗒️</tg-emoji>',
-            "like": "🍓",
-            "dislike": "🥵",
-            "prev": "⬅️",
-            "next": "➡️",
             "module": '<tg-emoji emoji-id="5433645645376264953">🏖️</tg-emoji>',
-            "close": "❌",
             "channel": '<tg-emoji emoji-id="5278256077954105203">📢</tg-emoji>',
             "removed": "🗑️",
             "modules_list": '<tg-emoji emoji-id="5472178859300363509">🏖️</tg-emoji>',
@@ -384,12 +369,7 @@ class FHeta(loader.Module):
             "description": '<tg-emoji emoji-id="5251524493561569780">🍃</tg-emoji>',
             "command": '<tg-emoji emoji-id="5449850741667668411">🦋</tg-emoji>',
             "placeholder": '<tg-emoji emoji-id="5434121252874756456">🗒️</tg-emoji>',
-            "like": "🌸",
-            "dislike": "🌧️",
-            "prev": "⏪",
-            "next": "⏩",
             "module": '<tg-emoji emoji-id="5440911110838425969">🌿</tg-emoji>',
-            "close": "❌",
             "channel": '<tg-emoji emoji-id="5278256077954105203">📢</tg-emoji>',
             "removed": "🗑️",
             "modules_list": '<tg-emoji emoji-id="5440748683765227563">🌺</tg-emoji>',
@@ -405,12 +385,7 @@ class FHeta(loader.Module):
             "description": '<tg-emoji emoji-id="5406631276042002796">📜</tg-emoji>',
             "command": '<tg-emoji emoji-id="5212963577098417551">🍂</tg-emoji>',
             "placeholder": '<tg-emoji emoji-id="5363965354391388799">🗒️</tg-emoji>',
-            "like": "🍎",
-            "dislike": "🌧️",
-            "prev": "👈",
-            "next": "👉",
             "module": '<tg-emoji emoji-id="5249157915041865558">🍄</tg-emoji>',
-            "close": "❌",
             "channel": '<tg-emoji emoji-id="5278256077954105203">📢</tg-emoji>',
             "removed": "🗑️",
             "modules_list": '<tg-emoji emoji-id="5305495722618010655">🍂</tg-emoji>',
@@ -420,7 +395,7 @@ class FHeta(loader.Module):
             "notify_requirements": "🍁"
         }
     }
-
+    
     def __init__(self):
         self.config = loader.ModuleConfig(
             loader.ConfigValue(
@@ -624,11 +599,6 @@ class FHeta(loader.Module):
         return ""
 
     def _mk_btns(self, install: str, stats: Dict, idx: int, mods: Optional[List] = None, query: str = "") -> List[List[Dict]]:
-        like_emoji = self._get_emoji("like")
-        dislike_emoji = self._get_emoji("dislike")
-        prev_emoji = self._get_emoji("prev")
-        next_emoji = self._get_emoji("next")
-        
         buttons =[]
         
         decoded_install = unquote(install.replace('%20', '___SPACE___')).replace('___SPACE___', '%20')
@@ -642,8 +612,8 @@ class FHeta(loader.Module):
             ])
         
         buttons.append([
-            {"text": f"{like_emoji} {stats.get('likes', 0)}", "callback": self._rate_cb, "args": (install, "like", idx, mods, query)},
-            {"text": f"{dislike_emoji} {stats.get('dislikes', 0)}", "callback": self._rate_cb, "args": (install, "dislike", idx, mods, query)}
+            {"text": f"↑ {stats.get('likes', 0)}", "callback": self._rate_cb, "args": (install, "like", idx, mods, query)},
+            {"text": f"↓ {stats.get('dislikes', 0)}", "callback": self._rate_cb, "args": (install, "dislike", idx, mods, query)}
         ])
         
         if mods and len(mods) > 1:
@@ -652,19 +622,15 @@ class FHeta(loader.Module):
         if mods and len(mods) > 1:
             nav_buttons =[]
             if idx > 0:
-                nav_buttons.append({"text": prev_emoji, "callback": self._nav_cb, "args": (idx - 1, mods, query)})
+                nav_buttons.append({"text": "←", "callback": self._nav_cb, "args": (idx - 1, mods, query)})
             if idx < len(mods) - 1:
-                nav_buttons.append({"text": next_emoji, "callback": self._nav_cb, "args": (idx + 1, mods, query)})
+                nav_buttons.append({"text": "→", "callback": self._nav_cb, "args": (idx + 1, mods, query)})
             if nav_buttons:
                 buttons.append(nav_buttons)
 
         return buttons
 
     def _mk_list_btns(self, mods: List, query: str, page: int = 0, current_idx: int = 0) -> List[List[Dict]]:
-        prev_emoji = self._get_emoji("prev")
-        next_emoji = self._get_emoji("next")
-        close_emoji = self._get_emoji("close")
-        
         buttons =[]
         items_per_page = 8
         total_pages = (len(mods) + items_per_page - 1) // items_per_page
@@ -683,15 +649,15 @@ class FHeta(loader.Module):
         
         nav_buttons =[]
         if page > 0:
-            nav_buttons.append({"text": prev_emoji, "callback": self._list_page_cb, "args": (page - 1, mods, query, current_idx)})
+            nav_buttons.append({"text": "←", "callback": self._list_page_cb, "args": (page - 1, mods, query, current_idx)})
         if page < total_pages - 1:
-            nav_buttons.append({"text": next_emoji, "callback": self._list_page_cb, "args": (page + 1, mods, query, current_idx)})
+            nav_buttons.append({"text": "→", "callback": self._list_page_cb, "args": (page + 1, mods, query, current_idx)})
         
         if nav_buttons:
             buttons.append(nav_buttons)
         
         buttons.append([
-            {"text": close_emoji, "callback": self._close_list_cb, "args": (current_idx, mods, query)}
+            {"text": "⛌", "callback": self._close_list_cb, "args": (current_idx, mods, query)}
         ])
         
         return buttons
