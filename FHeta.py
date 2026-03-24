@@ -27,6 +27,7 @@ from herokutl.tl.functions.contacts import UnblockRequest
 from herokutl.errors.common import ScamDetectionError
 from aiogram.types import InlineQueryResultArticle, InputTextMessageContent, LinkPreviewOptions
 
+
 @loader.tds
 class FHeta(loader.Module):
     '''Module for searching modules! Watch all FHeta news in @FHeta_Updates!'''
