@@ -46,9 +46,9 @@ class FHeta(loader.Module):
         "more_cmds": "<i>...and {remaining} more commands.</i>",
         "more_phs": "<i>...and {remaining} more placeholders.</i>",
         "lang": "en",
-        "rating_added": "{emoji} Rating submitted!",
-        "rating_changed": "{emoji} Rating has been changed!",
-        "rating_removed": "{emoji} Rating deleted!",
+        "rating_added": "✔ Rating submitted!",
+        "rating_changed": "✔ Rating has been changed!",
+        "rating_removed": "✔ Rating deleted!",
         "inline_no_query": "Enter a query to search.",
         "inline_desc": "Name, command, description, author.",
         "inline_no_results": "Try another query.",
@@ -58,11 +58,11 @@ class FHeta(loader.Module):
         "results_count": "{idx}/{total}",
         "join_channel": "{emoji} This is the channel with all updates in FHeta!",
         "modules_list": "{emoji} <b>All found modules:</b>",
-        "success": "{emoji} Module successfully installed!",
-        "error": "{emoji} Error, perhaps the module is broken!",
-        "overwrite": "{emoji} Error, module tried to overwrite built-in module!",
-        "requirements": "{emoji} Dependencies installation error!",
-        "requirements_deps": "{emoji} Dependencies installation error ({deps})!",
+        "success": "✔ Module successfully installed!",
+        "error": "✘ Error, perhaps the module is broken!",
+        "overwrite": "✘ Error, module tried to overwrite built-in module!",
+        "requirements": "✘ Dependencies installation error!",
+        "requirements_deps": "✘ Dependencies installation error ({deps})!",
         "code": "Code",
         "_cfg_doc_only_official_developers": "Use only modules from official Heroku developers when searching?",
         "_cfg_doc_theme": "Theme for emojis."
@@ -82,9 +82,9 @@ class FHeta(loader.Module):
         "more_cmds": "<i>...и еще {remaining} команд.</i>",
         "more_phs": "<i>...и еще {remaining} плейсхолдеров.</i>",
         "lang": "ru",
-        "rating_added": "{emoji} Оценка добавлена!",
-        "rating_changed": "{emoji} Оценка изменена!",
-        "rating_removed": "{emoji} Оценка удалена!",
+        "rating_added": "✔ Оценка добавлена!",
+        "rating_changed": "✔ Оценка изменена!",
+        "rating_removed": "✔ Оценка удалена!",
         "inline_no_query": "Введите запрос для поиска.",
         "inline_desc": "Название, команда, описание, автор.",
         "inline_no_results": "Попробуйте другой запрос.",
@@ -93,11 +93,11 @@ class FHeta(loader.Module):
         "install_btn": "Установить",
         "join_channel": "{emoji} Это канал со всеми обновлениями FHeta!",
         "modules_list": "{emoji} <b>Все найденные модули:</b>",
-        "success": "{emoji} Модуль успешно установлен!",
-        "error": "{emoji} Ошибка, возможно, модуль поломан!",
-        "overwrite": "{emoji} Ошибка, модуль пытался перезаписать встроенный модуль!",
-        "requirements": "{emoji} Ошибка установки зависимостей!",
-        "requirements_deps": "{emoji} Ошибка установки зависимостей ({deps})!",
+        "success": "✔ Модуль успешно установлен!",
+        "error": "✘ Ошибка, возможно, модуль поломан!",
+        "overwrite": "✘ Ошибка, модуль пытался перезаписать встроенный модуль!",
+        "requirements": "✘ Ошибка установки зависимостей!",
+        "requirements_deps": "✘ Ошибка установки зависимостей ({deps})!",
         "code": "Код",
         "_cfg_doc_only_official_developers": "Использовать только модули от официальных разработчиков Heroku при поиске?",
         "_cfg_doc_theme": "Тема для эмодзи."
@@ -117,9 +117,9 @@ class FHeta(loader.Module):
         "more_cmds": "<i>...і ще {remaining} команд.</i>",
         "more_phs": "<i>...і ще {remaining} плейсхолдерів.</i>",
         "lang": "ua",
-        "rating_added": "{emoji} Оцінку додано!",
-        "rating_changed": "{emoji} Оцінку змінено!",
-        "rating_removed": "{emoji} Оцінку видалено!",
+        "rating_added": "✔ Оцінку додано!",
+        "rating_changed": "✔ Оцінку змінено!",
+        "rating_removed": "✔ Оцінку видалено!",
         "inline_no_query": "Введіть запит для пошуку.",
         "inline_desc": "Назва, команда, опис, автор.",
         "inline_no_results": "Спробуйте інший запит.",
@@ -128,11 +128,11 @@ class FHeta(loader.Module):
         "install_btn": "Встановити",
         "join_channel": "{emoji} Це канал з усіма оновленнями FHeta!",
         "modules_list": "{emoji} <b>Всі знайдені модулі:</b>",
-        "success": "{emoji} Модуль успішно встановлено!",
-        "error": "{emoji} Помилка, можливо, модуль поламаний!",
-        "overwrite": "{emoji} Помилка, модуль намагався перезаписати вбудований модуль!",
-        "requirements": "{emoji} Помилка встановлення залежностей!",
-        "requirements_deps": "{emoji} Помилка встановлення залежностей ({deps})!",
+        "success": "✔ Модуль успішно встановлено!",
+        "error": "✘ Помилка, можливо, модуль поламаний!",
+        "overwrite": "✘ Помилка, модуль намагався перезаписати вбудований модуль!",
+        "requirements": "✘ Помилка встановлення залежностей!",
+        "requirements_deps": "✘ Помилка встановлення залежностей ({deps})!",
         "code": "Код",
         "_cfg_doc_only_official_developers": "Використовувати тільки модулі від офіційних розробників Heroku при пошуку?",
         "_cfg_doc_theme": "Тема для емодзі."
@@ -152,9 +152,9 @@ class FHeta(loader.Module):
         "more_cmds": "<i>...және тағы {remaining} команда.</i>",
         "more_phs": "<i>...және тағы {remaining} плейсхолдер.</i>",
         "lang": "kz",
-        "rating_added": "{emoji} Бағалау қосылды!",
-        "rating_changed": "{emoji} Бағалау өзгертілді!",
-        "rating_removed": "{emoji} Бағалау жойылды!",
+        "rating_added": "✔ Бағалау қосылды!",
+        "rating_changed": "✔ Бағалау өзгертілді!",
+        "rating_removed": "✔ Бағалау жойылды!",
         "inline_no_query": "Іздеу үшін сұрау енгізіңіз.",
         "inline_desc": "Атауы, команда, сипаттама, автор.",
         "inline_no_results": "Басқа сұрауды қолданып көріңіз.",
@@ -163,11 +163,11 @@ class FHeta(loader.Module):
         "install_btn": "Орнату",
         "join_channel": "{emoji} Бұл FHeta барлық жаңартулары бар арна!",
         "modules_list": "{emoji} <b>Барлық табылған модульдер:</b>",
-        "success": "{emoji} Модуль сәтті орнатылды!",
-        "error": "{emoji} Қате, мүмкін модуль бұзылған!",
-        "overwrite": "{emoji} Қате, модуль кіріктірілген модульді қайта жазуға тырысты!",
-        "requirements": "{emoji} Тәуелділіктерді орнату қатесі!",
-        "requirements_deps": "{emoji} Тәуелділіктерді орнату қатесі ({deps})!",
+        "success": "✔ Модуль сәтті орнатылды!",
+        "error": "✘ Қате, мүмкін модуль бұзылған!",
+        "overwrite": "✘ Қате, модуль кіріктірілген модульді қайта жазуға тырысты!",
+        "requirements": "✘ Тәуелділіктерді орнату қатесі!",
+        "requirements_deps": "✘ Тәуелділіктерді орнату қатесі ({deps})!",
         "code": "Код",
         "_cfg_doc_only_official_developers": "Іздеу кезінде тек ресми Heroku әзірлеушілерінің модульдерін пайдалану керек пе?",
         "_cfg_doc_theme": "Эмодзилер үшін тақырып."
@@ -187,9 +187,9 @@ class FHeta(loader.Module):
         "more_cmds": "<i>...va yana {remaining} ta buyruq.</i>",
         "more_phs": "<i>...va yana {remaining} ta pleysholder.</i>",
         "lang": "uz",
-        "rating_added": "{emoji} Reyting qo'shildi!",
-        "rating_changed": "{emoji} Reyting o'zgartirildi!",
-        "rating_removed": "{emoji} Reyting o'chirildi!",
+        "rating_added": "✔ Reyting qo'shildi!",
+        "rating_changed": "✔ Reyting o'zgartirildi!",
+        "rating_removed": "✔ Reyting o'chirildi!",
         "inline_no_query": "Qidirish uchun so'rov kiriting.",
         "inline_desc": "Nomi, buyruq, tavsif, muallif.",
         "inline_no_results": "Boshqa so'rovni sinab ko'ring.",
@@ -198,11 +198,11 @@ class FHeta(loader.Module):
         "install_btn": "O'rnatish",
         "join_channel": "{emoji} Bu FHeta barcha yangilanishlari bo'lgan kanal!",
         "modules_list": "{emoji} <b>Barcha topilgan modullar:</b>",
-        "success": "{emoji} Modul muvaffaqiyatli o'rnatildi!",
-        "error": "{emoji} Xatolik, ehtimol modul buzilgan!",
-        "overwrite": "{emoji} Xatolik, modul o'rnatilgan modulni qayta yozishga harakat qildi!",
-        "requirements": "{emoji} Bog'liqliklarni o'rnatish xatosi!",
-        "requirements_deps": "{emoji} Bog'liqliklarni o'rnatish xatosi ({deps})!",
+        "success": "✔ Modul muvaffaqiyatli o'rnatildi!",
+        "error": "✘ Xatolik, ehtimol modul buzilgan!",
+        "overwrite": "✘ Xatolik, modul o'rnatilgan modulni qayta yozishga harakat qildi!",
+        "requirements": "✘ Bog'liqliklarni o'rnatish xatosi!",
+        "requirements_deps": "✘ Bog'liqliklarni o'rnatish xatosi ({deps})!",
         "code": "Kod",
         "_cfg_doc_only_official_developers": "Qidiruv paytida faqat rasmiy Heroku ishlab chiquvchilarining modullaridan foydalanish kerakmi?",
         "_cfg_doc_theme": "Emojilar uchun mavzu."
@@ -222,9 +222,9 @@ class FHeta(loader.Module):
         "more_cmds": "<i>...et {remaining} commandes supplémentaires.</i>",
         "more_phs": "<i>...et {remaining} espaces réservés supplémentaires.</i>",
         "lang": "fr",
-        "rating_added": "{emoji} Note ajoutée!",
-        "rating_changed": "{emoji} Note modifiée!",
-        "rating_removed": "{emoji} Note supprimée!",
+        "rating_added": "✔ Note ajoutée!",
+        "rating_changed": "✔ Note modifiée!",
+        "rating_removed": "✔ Note supprimée!",
         "inline_no_query": "Entrez une requête pour rechercher.",
         "inline_desc": "Nom, commande, description, auteur.",
         "inline_no_results": "Essayez une autre requête.",
@@ -233,11 +233,11 @@ class FHeta(loader.Module):
         "install_btn": "Installer",
         "join_channel": "{emoji} C'est le canal avec toutes les mises à jour de FHeta!",
         "modules_list": "{emoji} <b>Tous les modules trouvés:</b>",
-        "success": "{emoji} Module installé avec succès!",
-        "error": "{emoji} Erreur, le module est peut-être cassé!",
-        "overwrite": "{emoji} Erreur, le module a tenté d'écraser le module intégré!",
-        "requirements": "{emoji} Erreur d'installation des dépendances!",
-        "requirements_deps": "{emoji} Erreur d'installation des dépendances ({deps})!",
+        "success": "✔ Module installé avec succès!",
+        "error": "✘ Erreur, le module est peut-être cassé!",
+        "overwrite": "✘ Erreur, le module a tenté d'écraser le module intégré!",
+        "requirements": "✘ Erreur d'installation des dépendances!",
+        "requirements_deps": "✘ Erreur d'installation des dépendances ({deps})!",
         "code": "Code",
         "_cfg_doc_only_official_developers": "Utiliser uniquement les modules des développeurs Heroku officiels lors de la recherche?",
         "_cfg_doc_theme": "Thème pour les emojis."
@@ -257,9 +257,9 @@ class FHeta(loader.Module):
         "more_cmds": "<i>...und {remaining} weitere Befehle.</i>",
         "more_phs": "<i>...und {remaining} weitere Platzhalter.</i>",
         "lang": "de",
-        "rating_added": "{emoji} Bewertung hinzugefügt!",
-        "rating_changed": "{emoji} Bewertung geändert!",
-        "rating_removed": "{emoji} Bewertung gelöscht!",
+        "rating_added": "✔ Bewertung hinzugefügt!",
+        "rating_changed": "✔ Bewertung geändert!",
+        "rating_removed": "✔ Bewertung gelöscht!",
         "inline_no_query": "Geben Sie eine Suchanfrage ein.",
         "inline_desc": "Name, Befehl, Beschreibung, Autor.",
         "inline_no_results": "Versuchen Sie eine andere Anfrage.",
@@ -268,11 +268,11 @@ class FHeta(loader.Module):
         "install_btn": "Installieren",
         "join_channel": "{emoji} Dies ist der Kanal mit allen FHeta-Updates!",
         "modules_list": "{emoji} <b>Alle gefundenen Module:</b>",
-        "success": "{emoji} Modul erfolgreich installiert!",
-        "error": "{emoji} Fehler, vielleicht ist das Modul kaputt!",
-        "overwrite": "{emoji} Fehler, Modul hat versucht, das integrierte Modul zu überschreiben!",
-        "requirements": "{emoji} Fehler bei der Installation von Abhängigkeiten!",
-        "requirements_deps": "{emoji} Fehler bei der Installation von Abhängigkeiten ({deps})!",
+        "success": "✔ Modul erfolgreich installiert!",
+        "error": "✘ Fehler, vielleicht ist das Modul kaputt!",
+        "overwrite": "✘ Fehler, Modul hat versucht, das integrierte Modul zu überschreiben!",
+        "requirements": "✘ Fehler bei der Installation von Abhängigkeiten!",
+        "requirements_deps": "✘ Fehler bei der Installation von Abhängigkeiten ({deps})!",
         "code": "Code",
         "_cfg_doc_only_official_developers": "Nur Module von offiziellen Heroku-Entwicklern bei der Suche verwenden?",
         "_cfg_doc_theme": "Thema für Emojis."
@@ -292,9 +292,9 @@ class FHeta(loader.Module):
         "more_cmds": "<i>...さらに {remaining} 個のコマンド。</i>",
         "more_phs": "<i>...さらに {remaining} 個のプレースホルダー。</i>",
         "lang": "jp",
-        "rating_added": "{emoji} 評価が追加されました！",
-        "rating_changed": "{emoji} 評価が変更されました！",
-        "rating_removed": "{emoji} 評価が削除されました！",
+        "rating_added": "✔ 評価が追加されました！",
+        "rating_changed": "✔ 評価が変更されました！",
+        "rating_removed": "✔ 評価が削除されました！",
         "inline_no_query": "検索するクエリを入力してください。",
         "inline_desc": "名前、コマンド、説明、作成者。",
         "inline_no_results": "別のクエリを試してください。",
@@ -303,11 +303,11 @@ class FHeta(loader.Module):
         "install_btn": "インストール",
         "join_channel": "{emoji} これはFHetaのすべての更新があるチャンネルです！",
         "modules_list": "{emoji} <b>見つかったすべてのモジュール:</b>",
-        "success": "{emoji} モジュールが正常にインストールされました!",
-        "error": "{emoji} エラー、モジュールが壊れている可能性があります!",
-        "overwrite": "{emoji} エラー、モジュールが組み込みモジュールを上書きしようとしました!",
-        "requirements": "{emoji} 依存関係のインストールエラー!",
-        "requirements_deps": "{emoji} 依存関係のインストールエラー ({deps})!",
+        "success": "✔ モジュールが正常にインストールされました!",
+        "error": "✘ エラー、モジュールが壊れている可能性があります!",
+        "overwrite": "✘ エラー、モジュールが組み込みモジュールを上書きしようとしました!",
+        "requirements": "✘ 依存関係のインストールエラー!",
+        "requirements_deps": "✘ 依存関係のインストールエラー ({deps})!",
         "code": "コード",
         "_cfg_doc_only_official_developers": "検索時に公式Heroku開発者のモジュールのみを使用しますか？",
         "_cfg_doc_theme": "絵文字のテーマ。"
@@ -323,12 +323,7 @@ class FHeta(loader.Module):
             "placeholder": '<tg-emoji emoji-id="5359785904535774578">🗒️</tg-emoji>',
             "module": '<tg-emoji emoji-id="5454112830989025752">📦</tg-emoji>',
             "channel": '<tg-emoji emoji-id="5278256077954105203">📢</tg-emoji>',
-            "removed": "🗑️",
-            "modules_list": '<tg-emoji emoji-id="5197269100878907942">📋</tg-emoji>',
-            "notify_success": "✅",
-            "notify_error": "❌",
-            "notify_overwrite": "⚠️",
-            "notify_requirements": "❌"
+            "modules_list": '<tg-emoji emoji-id="5197269100878907942">📋</tg-emoji>'
         },
         "winter": {
             "search": '<tg-emoji emoji-id="5431895003821513760">❄️</tg-emoji>',
@@ -355,12 +350,7 @@ class FHeta(loader.Module):
             "placeholder": '<tg-emoji emoji-id="5434121252874756456">🗒️</tg-emoji>',
             "module": '<tg-emoji emoji-id="5433645645376264953">🏖️</tg-emoji>',
             "channel": '<tg-emoji emoji-id="5278256077954105203">📢</tg-emoji>',
-            "removed": "🗑️",
-            "modules_list": '<tg-emoji emoji-id="5472178859300363509">🏖️</tg-emoji>',
-            "notify_success": "🍹",
-            "notify_error": "🌡️",
-            "notify_overwrite": "🥵",
-            "notify_requirements": "🌡️"
+            "modules_list": '<tg-emoji emoji-id="5472178859300363509">🏖️</tg-emoji>'
         },
         "spring": {
             "search": '<tg-emoji emoji-id="5449885771420934013">🌱</tg-emoji>',
@@ -371,12 +361,7 @@ class FHeta(loader.Module):
             "placeholder": '<tg-emoji emoji-id="5434121252874756456">🗒️</tg-emoji>',
             "module": '<tg-emoji emoji-id="5440911110838425969">🌿</tg-emoji>',
             "channel": '<tg-emoji emoji-id="5278256077954105203">📢</tg-emoji>',
-            "removed": "🗑️",
-            "modules_list": '<tg-emoji emoji-id="5440748683765227563">🌺</tg-emoji>',
-            "notify_success": "🌺",
-            "notify_error": "🥀",
-            "notify_overwrite": "🌧️",
-            "notify_requirements": "🥀"
+            "modules_list": '<tg-emoji emoji-id="5440748683765227563">🌺</tg-emoji>'
         },
         "autumn": {
             "search": '<tg-emoji emoji-id="5253944419870062295">🍂</tg-emoji>',
@@ -387,12 +372,7 @@ class FHeta(loader.Module):
             "placeholder": '<tg-emoji emoji-id="5363965354391388799">🗒️</tg-emoji>',
             "module": '<tg-emoji emoji-id="5249157915041865558">🍄</tg-emoji>',
             "channel": '<tg-emoji emoji-id="5278256077954105203">📢</tg-emoji>',
-            "removed": "🗑️",
-            "modules_list": '<tg-emoji emoji-id="5305495722618010655">🍂</tg-emoji>',
-            "notify_success": "🍄",
-            "notify_error": "🍁",
-            "notify_overwrite": "🌧️",
-            "notify_requirements": "🍁"
+            "modules_list": '<tg-emoji emoji-id="5305495722618010655">🍂</tg-emoji>'
         }
     }
     
@@ -657,7 +637,7 @@ class FHeta(loader.Module):
             buttons.append(nav_buttons)
         
         buttons.append([
-            {"text": "⛌", "callback": self._close_list_cb, "args": (current_idx, mods, query)}
+            {"text": "✘", "callback": self._close_list_cb, "args": (current_idx, mods, query)}
         ])
         
         return buttons
@@ -864,11 +844,11 @@ class FHeta(loader.Module):
             result_status = result.get("status", "")
             try:
                 if result_status == "added":
-                    await call.answer(self.strings["rating_added"].format(emoji=self._get_emoji("like")), show_alert=True)
+                    await call.answer(self.strings["rating_added"], show_alert=True)
                 elif result_status == "changed":
-                    await call.answer(self.strings["rating_changed"].format(emoji=self._get_emoji("like")), show_alert=True)
+                    await call.answer(self.strings["rating_changed"], show_alert=True)
                 elif result_status == "removed":
-                    await call.answer(self.strings["rating_removed"].format(emoji=self._get_emoji("removed")), show_alert=True)
+                    await call.answer(self.strings["rating_removed"], show_alert=True)
             except:
                 pass
 
@@ -880,7 +860,7 @@ class FHeta(loader.Module):
         except (aiohttp.ClientError, aiohttp.ClientResponseError) as e:
             try:
                 await call.answer(
-                    self.strings["error"].format(emoji=self._get_emoji("notify_error")),
+                    self.strings["error"],
                     show_alert=True
                 )
             except:
@@ -901,7 +881,7 @@ class FHeta(loader.Module):
                     
                     try:
                         await call.answer(
-                            self.strings["success"].format(emoji=self._get_emoji("notify_success")),
+                            self.strings["success"],
                             show_alert=False
                         )
                     except:
@@ -915,7 +895,7 @@ class FHeta(loader.Module):
                     else:
                         try:
                             await call.answer(
-                                self.strings["requirements"].format(emoji=self._get_emoji("notify_requirements")),
+                                self.strings["requirements"],
                                 show_alert=True
                             )
                         except Exception:
@@ -928,10 +908,7 @@ class FHeta(loader.Module):
                         deps_text = ", ".join(deps[:5])
                         try:
                             await call.answer(
-                                self.strings["requirements_deps"].format(
-                                    emoji=self._get_emoji("notify_requirements"),
-                                    deps=deps_text
-                                ),
+                                self.strings["requirements_deps"].format(deps=deps_text),
                                 show_alert=True
                             )
                         except:
@@ -939,7 +916,7 @@ class FHeta(loader.Module):
                     else:
                         try:
                             await call.answer(
-                                self.strings["requirements"].format(emoji=self._get_emoji("notify_requirements")),
+                                self.strings["requirements"],
                                 show_alert=True
                             )
                         except:
@@ -949,7 +926,7 @@ class FHeta(loader.Module):
                 elif result == "overwrite":
                     try:
                         await call.answer(
-                            self.strings["overwrite"].format(emoji=self._get_emoji("notify_overwrite")),
+                            self.strings["overwrite"],
                             show_alert=True
                         )
                     except:
@@ -959,7 +936,7 @@ class FHeta(loader.Module):
                 else:
                     try:
                         await call.answer(
-                            self.strings["error"].format(emoji=self._get_emoji("notify_error")),
+                            self.strings["error"],
                             show_alert=True
                         )
                     except:
@@ -969,7 +946,7 @@ class FHeta(loader.Module):
             except:
                 try:
                     await call.answer(
-                        self.strings["error"].format(emoji=self._get_emoji("notify_error")),
+                        self.strings["error"],
                         show_alert=True
                     )
                 except:
@@ -978,7 +955,7 @@ class FHeta(loader.Module):
         
         try:
             await call.answer(
-                self.strings["requirements"].format(emoji=self._get_emoji("notify_requirements")),
+                self.strings["requirements"],
                 show_alert=True
             )
         except:
