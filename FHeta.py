@@ -1,4 +1,4 @@
-__version__ = (9, 3, 5)
+__version__ = (9, 3, 6)
 
 # meta developer: @FModules
 # meta pic: https://raw.githubusercontent.com/Fixyres/FModules/refs/heads/main/assets/FHeta/logo.png
@@ -14,6 +14,7 @@ __version__ = (9, 3, 5)
 import asyncio
 import aiohttp
 import ast
+import re
 import sys
 import uuid
 from typing import Optional, Dict, List
@@ -24,7 +25,7 @@ from .. import loader, utils
 from ..types import CoreOverwriteError
 from herokutl.tl.functions.contacts import UnblockRequest
 from herokutl.errors.common import ScamDetectionError
-
+from aiogram.types import InlineQueryResultArticle, InputTextMessageContent, LinkPreviewOptions
 
 @loader.tds
 class FHeta(loader.Module):
@@ -40,6 +41,9 @@ class FHeta(loader.Module):
         "module_info_version": "{emoji} <code>{name}</code> <b>by</b> <code>{author}</code> (<code>v{version}</code>)",
         "desc": "\n\n{emoji} <b>Description:</b>\n<blockquote expandable>{desc}</blockquote>",
         "cmds": "\n\n{emoji} <b>Commands:</b>\n<blockquote expandable>{cmds}</blockquote>",
+        "placeholders": "\n\n{emoji} <b>Placeholders:</b>\n<blockquote expandable>{placeholders}</blockquote>",
+        "more_cmds": "<i>...and {remaining} more commands.</i>",
+        "more_phs": "<i>...and {remaining} more placeholders.</i>",
         "lang": "en",
         "rating_added": "{emoji} Rating submitted!",
         "rating_changed": "{emoji} Rating has been changed!",
@@ -73,6 +77,9 @@ class FHeta(loader.Module):
         "module_info_version": "{emoji} <code>{name}</code> <b>от</b> <code>{author}</code> (<code>v{version}</code>)",
         "desc": "\n\n{emoji} <b>Описание:</b>\n<blockquote expandable>{desc}</blockquote>",
         "cmds": "\n\n{emoji} <b>Команды:</b>\n<blockquote expandable>{cmds}</blockquote>",
+        "placeholders": "\n\n{emoji} <b>Плейсхолдеры:</b>\n<blockquote expandable>{placeholders}</blockquote>",
+        "more_cmds": "<i>...и еще {remaining} команд.</i>",
+        "more_phs": "<i>...и еще {remaining} плейсхолдеров.</i>",
         "lang": "ru",
         "rating_added": "{emoji} Оценка добавлена!",
         "rating_changed": "{emoji} Оценка изменена!",
@@ -105,6 +112,9 @@ class FHeta(loader.Module):
         "module_info_version": "{emoji} <code>{name}</code> <b>від</b> <code>{author}</code> (<code>v{version}</code>)",
         "desc": "\n\n{emoji} <b>Опис:</b>\n<blockquote expandable>{desc}</blockquote>",
         "cmds": "\n\n{emoji} <b>Команди:</b>\n<blockquote expandable>{cmds}</blockquote>",
+        "placeholders": "\n\n{emoji} <b>Плейсхолдери:</b>\n<blockquote expandable>{placeholders}</blockquote>",
+        "more_cmds": "<i>...і ще {remaining} команд.</i>",
+        "more_phs": "<i>...і ще {remaining} плейсхолдерів.</i>",
         "lang": "ua",
         "rating_added": "{emoji} Оцінку додано!",
         "rating_changed": "{emoji} Оцінку змінено!",
@@ -137,6 +147,9 @@ class FHeta(loader.Module):
         "module_info_version": "{emoji} <code>{name}</code> <b>авторы</b> <code>{author}</code> (<code>v{version}</code>)",
         "desc": "\n\n{emoji} <b>Сипаттама:</b>\n<blockquote expandable>{desc}</blockquote>",
         "cmds": "\n\n{emoji} <b>Командалар:</b>\n<blockquote expandable>{cmds}</blockquote>",
+        "placeholders": "\n\n{emoji} <b>Плейсхолдерлер:</b>\n<blockquote expandable>{placeholders}</blockquote>",
+        "more_cmds": "<i>...және тағы {remaining} команда.</i>",
+        "more_phs": "<i>...және тағы {remaining} плейсхолдер.</i>",
         "lang": "kz",
         "rating_added": "{emoji} Бағалау қосылды!",
         "rating_changed": "{emoji} Бағалау өзгертілді!",
@@ -169,6 +182,9 @@ class FHeta(loader.Module):
         "module_info_version": "{emoji} <code>{name}</code> <b>muallif</b> <code>{author}</code> (<code>v{version}</code>)",
         "desc": "\n\n{emoji} <b>Tavsif:</b>\n<blockquote expandable>{desc}</blockquote>",
         "cmds": "\n\n{emoji} <b>Buyruqlar:</b>\n<blockquote expandable>{cmds}</blockquote>",
+        "placeholders": "\n\n{emoji} <b>Pleysholderlar:</b>\n<blockquote expandable>{placeholders}</blockquote>",
+        "more_cmds": "<i>...va yana {remaining} ta buyruq.</i>",
+        "more_phs": "<i>...va yana {remaining} ta pleysholder.</i>",
         "lang": "uz",
         "rating_added": "{emoji} Reyting qo'shildi!",
         "rating_changed": "{emoji} Reyting o'zgartirildi!",
@@ -201,6 +217,9 @@ class FHeta(loader.Module):
         "module_info_version": "{emoji} <code>{name}</code> <b>par</b> <code>{author}</code> (<code>v{version}</code>)",
         "desc": "\n\n{emoji} <b>Description:</b>\n<blockquote expandable>{desc}</blockquote>",
         "cmds": "\n\n{emoji} <b>Commandes:</b>\n<blockquote expandable>{cmds}</blockquote>",
+        "placeholders": "\n\n{emoji} <b>Espaces réservés:</b>\n<blockquote expandable>{placeholders}</blockquote>",
+        "more_cmds": "<i>...et {remaining} commandes supplémentaires.</i>",
+        "more_phs": "<i>...et {remaining} espaces réservés supplémentaires.</i>",
         "lang": "fr",
         "rating_added": "{emoji} Note ajoutée!",
         "rating_changed": "{emoji} Note modifiée!",
@@ -233,6 +252,9 @@ class FHeta(loader.Module):
         "module_info_version": "{emoji} <code>{name}</code> <b>von</b> <code>{author}</code> (<code>v{version}</code>)",
         "desc": "\n\n{emoji} <b>Beschreibung:</b>\n<blockquote expandable>{desc}</blockquote>",
         "cmds": "\n\n{emoji} <b>Befehle:</b>\n<blockquote expandable>{cmds}</blockquote>",
+        "placeholders": "\n\n{emoji} <b>Platzhalter:</b>\n<blockquote expandable>{placeholders}</blockquote>",
+        "more_cmds": "<i>...und {remaining} weitere Befehle.</i>",
+        "more_phs": "<i>...und {remaining} weitere Platzhalter.</i>",
         "lang": "de",
         "rating_added": "{emoji} Bewertung hinzugefügt!",
         "rating_changed": "{emoji} Bewertung geändert!",
@@ -265,6 +287,9 @@ class FHeta(loader.Module):
         "module_info_version": "{emoji} <code>{name}</code> <b>作成者</b> <code>{author}</code> (<code>v{version}</code>)",
         "desc": "\n\n{emoji} <b>説明:</b>\n<blockquote expandable>{desc}</blockquote>",
         "cmds": "\n\n{emoji} <b>コマンド:</b>\n<blockquote expandable>{cmds}</blockquote>",
+        "placeholders": "\n\n{emoji} <b>プレースホルダー:</b>\n<blockquote expandable>{placeholders}</blockquote>",
+        "more_cmds": "<i>...さらに {remaining} 個のコマンド。</i>",
+        "more_phs": "<i>...さらに {remaining} 個のプレースホルダー。</i>",
         "lang": "jp",
         "rating_added": "{emoji} 評価が追加されました！",
         "rating_changed": "{emoji} 評価が変更されました！",
@@ -294,6 +319,7 @@ class FHeta(loader.Module):
             "warn": '<tg-emoji emoji-id="5447644880824181073">⚠️</tg-emoji>',
             "description": '<tg-emoji emoji-id="5334882760735598374">📝</tg-emoji>',
             "command": '<tg-emoji emoji-id="5341715473882955310">⚙️</tg-emoji>',
+            "placeholder": '<tg-emoji emoji-id="5359785904535774578">🗒️</tg-emoji>',
             "like": "👍",
             "dislike": "👎",
             "prev": "◀️",
@@ -314,6 +340,7 @@ class FHeta(loader.Module):
             "warn": '<tg-emoji emoji-id="5447644880824181073">🌨️</tg-emoji>',
             "description": '<tg-emoji emoji-id="5255850496291259327">📜</tg-emoji>',
             "command": '<tg-emoji emoji-id="5199503707938505333">🎅</tg-emoji>',
+            "placeholder": '<tg-emoji emoji-id="5204046675236109418">🗒️</tg-emoji>',
             "like": "☕",
             "dislike": "🥶",
             "prev": "⏮️",
@@ -334,6 +361,7 @@ class FHeta(loader.Module):
             "warn": '<tg-emoji emoji-id="5447644880824181073">⚠️</tg-emoji>',
             "description": '<tg-emoji emoji-id="5361684086807076580">🍹</tg-emoji>',
             "command": '<tg-emoji emoji-id="5442644589703866634">🏄</tg-emoji>',
+            "placeholder": '<tg-emoji emoji-id="5434121252874756456">🗒️</tg-emoji>',
             "like": "🍓",
             "dislike": "🥵",
             "prev": "⬅️",
@@ -354,6 +382,7 @@ class FHeta(loader.Module):
             "warn": '<tg-emoji emoji-id="5447644880824181073">⚠️</tg-emoji>',
             "description": '<tg-emoji emoji-id="5251524493561569780">🍃</tg-emoji>',
             "command": '<tg-emoji emoji-id="5449850741667668411">🦋</tg-emoji>',
+            "placeholder": '<tg-emoji emoji-id="5434121252874756456">🗒️</tg-emoji>',
             "like": "🌸",
             "dislike": "🌧️",
             "prev": "⏪",
@@ -374,6 +403,7 @@ class FHeta(loader.Module):
             "warn": '<tg-emoji emoji-id="5447644880824181073">⚠️</tg-emoji>',
             "description": '<tg-emoji emoji-id="5406631276042002796">📜</tg-emoji>',
             "command": '<tg-emoji emoji-id="5212963577098417551">🍂</tg-emoji>',
+            "placeholder": '<tg-emoji emoji-id="5363965354391388799">🗒️</tg-emoji>',
             "like": "🍎",
             "dislike": "🌧️",
             "prev": "👈",
@@ -419,7 +449,7 @@ class FHeta(loader.Module):
         
         if self.token:
             result = await self._api_get("validatetkn", user_id=str(self.uid))
-            if not (isinstance(result, bool) and result):
+            if result == False:
                 self.token = None
         
         if not self.token:
@@ -480,6 +510,8 @@ class FHeta(loader.Module):
 
     def _fmt_mod(self, mod: Dict, query: str = "", idx: int = 1, total: int = 1, inline: bool = False) -> str:
         version = mod.get("version", "?.?.?")
+        has_banner = bool(mod.get("banner"))
+        limit = 950 if has_banner else 3700
         
         if version and version != "?.?.?":
             info = self.strings["module_info_version"].format(
@@ -502,16 +534,29 @@ class FHeta(loader.Module):
             else:
                 text = desc
             
+            text = str(text)
+            if has_banner and len(text) > 400:
+                text = text[:400] + "..."
+            
             info += self.strings["desc"].format(desc=utils.escape_html(text), emoji=self._get_emoji("description"))
 
-        info += self._fmt_cmds(mod.get("commands", []), limit=3700 - len(info))
+        info_clean_len = len(re.sub(r'<[^>]+>', '', info))
+        cmds_text = self._fmt_cmds(mod.get("commands",[]), limit=limit - info_clean_len)
+        info += cmds_text
+        
+        info_clean_len = len(re.sub(r'<[^>]+>', '', info))
+        phs_text = self._fmt_phs(mod.get("placeholders",[]), limit=limit - info_clean_len)
+        info += phs_text
+
         return info
 
     def _fmt_cmds(self, cmds: List[Dict], limit: int) -> str:
-        cmd_lines = []
+        if not cmds:
+            return ""
+        cmd_lines =[]
         lang = self.strings["lang"]
         
-        for cmd in cmds:
+        for i, cmd in enumerate(cmds):
             desc_dict = cmd.get("description", {})
             desc_text = desc_dict.get(lang) or desc_dict.get("doc") or ""
             
@@ -521,6 +566,9 @@ class FHeta(loader.Module):
             cmd_name = utils.escape_html(cmd.get("name", ""))
             cmd_desc = utils.escape_html(desc_text) if desc_text else ""
 
+            if cmd_desc:
+                cmd_desc = cmd_desc.split('\n')[0]
+
             if cmd.get("inline"):
                 line = f"<code>@{self.inline.bot_username} {cmd_name}</code> {cmd_desc}"
             else:
@@ -529,7 +577,11 @@ class FHeta(loader.Module):
             current_text = "\n".join(cmd_lines)
             test_text = current_text + ("\n" if current_text else "") + line
             
-            if len(test_text) > limit:
+            more_str = self.strings["more_cmds"].format(remaining=len(cmds) - i)
+            test_text_with_more = test_text + "\n" + more_str
+            
+            if len(re.sub(r'<[^>]+>', '', test_text_with_more)) > limit and i > 0:
+                cmd_lines.append(more_str)
                 break
             
             cmd_lines.append(line)
@@ -539,13 +591,44 @@ class FHeta(loader.Module):
             
         return ""
 
+    def _fmt_phs(self, phs: List[Dict], limit: int) -> str:
+        if not phs:
+            return ""
+        ph_lines =[]
+        
+        for i, ph in enumerate(phs):
+            ph_name = utils.escape_html(ph.get("name", ""))
+            ph_desc = utils.escape_html(ph.get("description", ""))
+            
+            if ph_desc:
+                line = f"<code>{{{ph_name}}}</code> {ph_desc}"
+            else:
+                line = f"<code>{{{ph_name}}}</code>"
+            
+            current_text = "\n".join(ph_lines)
+            test_text = current_text + ("\n" if current_text else "") + line
+            
+            more_str = self.strings["more_phs"].format(remaining=len(phs) - i)
+            test_text_with_more = test_text + "\n" + more_str
+            
+            if len(re.sub(r'<[^>]+>', '', test_text_with_more)) > limit and i > 0:
+                ph_lines.append(more_str)
+                break
+            
+            ph_lines.append(line)
+
+        if ph_lines:
+            return self.strings["placeholders"].format(placeholders="\n".join(ph_lines), emoji=self._get_emoji("placeholder"))
+            
+        return ""
+
     def _mk_btns(self, install: str, stats: Dict, idx: int, mods: Optional[List] = None, query: str = "") -> List[List[Dict]]:
         like_emoji = self._get_emoji("like")
         dislike_emoji = self._get_emoji("dislike")
         prev_emoji = self._get_emoji("prev")
         next_emoji = self._get_emoji("next")
         
-        buttons = []
+        buttons =[]
         
         decoded_install = unquote(install.replace('%20', '___SPACE___')).replace('___SPACE___', '%20')
         install_url = decoded_install[4:] if decoded_install.startswith('dlm ') else decoded_install
@@ -566,7 +649,7 @@ class FHeta(loader.Module):
             buttons[-1].insert(1, {"text": self.strings["results_count"].format(idx=idx+1, total=len(mods)), "callback": self._show_list_cb, "args": (idx, mods, query)})
 
         if mods and len(mods) > 1:
-            nav_buttons = []
+            nav_buttons =[]
             if idx > 0:
                 nav_buttons.append({"text": prev_emoji, "callback": self._nav_cb, "args": (idx - 1, mods, query)})
             if idx < len(mods) - 1:
@@ -581,7 +664,7 @@ class FHeta(loader.Module):
         next_emoji = self._get_emoji("next")
         close_emoji = self._get_emoji("close")
         
-        buttons = []
+        buttons =[]
         items_per_page = 8
         total_pages = (len(mods) + items_per_page - 1) // items_per_page
         
@@ -597,7 +680,7 @@ class FHeta(loader.Module):
                 {"text": button_text, "callback": self._select_from_list_cb, "args": (i, mods, query)}
             ])
         
-        nav_buttons = []
+        nav_buttons =[]
         if page > 0:
             nav_buttons.append({"text": prev_emoji, "callback": self._list_page_cb, "args": (page - 1, mods, query, current_idx)})
         if page < total_pages - 1:
@@ -612,23 +695,142 @@ class FHeta(loader.Module):
         
         return buttons
 
+    async def _edit_with_preview(self, call_or_msg_id, text: str, reply_markup: list, banner_url: str = None):
+        if banner_url:
+            text = f'<a href="{banner_url}">&#8203;</a>{text}'
+            lo = LinkPreviewOptions(url=banner_url, show_above_text=True, prefer_large_media=True)
+        else:
+            lo = LinkPreviewOptions(is_disabled=True)
+            
+        markup = self.inline.generate_markup(reply_markup)
+        
+        try:
+            if isinstance(call_or_msg_id, str):
+                await self.inline.bot.edit_message_text(
+                    inline_message_id=call_or_msg_id,
+                    text=text,
+                    reply_markup=markup,
+                    link_preview_options=lo,
+                    parse_mode="HTML"
+                )
+            else:
+                inline_msg_id = getattr(call_or_msg_id, "inline_message_id", None)
+                if inline_msg_id:
+                    await self.inline.bot.edit_message_text(
+                        inline_message_id=inline_msg_id,
+                        text=text,
+                        reply_markup=markup,
+                        link_preview_options=lo,
+                        parse_mode="HTML"
+                    )
+                elif getattr(call_or_msg_id, "message", None):
+                    await self.inline.bot.edit_message_text(
+                        chat_id=call_or_msg_id.message.chat.id,
+                        message_id=call_or_msg_id.message.message_id,
+                        text=text,
+                        reply_markup=markup,
+                        link_preview_options=lo,
+                        parse_mode="HTML"
+                    )
+        except Exception:
+            pass
+
+    async def _edit_with_preview(self, call_or_msg_id, text: str, reply_markup: list, banner_url: str = None):
+        if banner_url:
+            text = f'<a href="{banner_url}">&#8203;</a>{text}'
+            lo = LinkPreviewOptions(url=banner_url, show_above_text=True, prefer_large_media=True)
+        else:
+            lo = LinkPreviewOptions(is_disabled=True)
+            
+        markup = self.inline.generate_markup(reply_markup)
+        
+        try:
+            if isinstance(call_or_msg_id, str):
+                await self.inline.bot.edit_message_text(
+                    inline_message_id=call_or_msg_id,
+                    text=text,
+                    reply_markup=markup,
+                    link_preview_options=lo,
+                    parse_mode="HTML"
+                )
+            else:
+                inline_msg_id = getattr(call_or_msg_id, "inline_message_id", None)
+                if inline_msg_id:
+                    await self.inline.bot.edit_message_text(
+                        inline_message_id=inline_msg_id,
+                        text=text,
+                        reply_markup=markup,
+                        link_preview_options=lo,
+                        parse_mode="HTML"
+                    )
+                elif getattr(call_or_msg_id, "message", None):
+                    await self.inline.bot.edit_message_text(
+                        chat_id=call_or_msg_id.message.chat.id,
+                        message_id=call_or_msg_id.message.message_id,
+                        text=text,
+                        reply_markup=markup,
+                        link_preview_options=lo,
+                        parse_mode="HTML"
+                    )
+        except Exception:
+            pass
+
+    async def _edit_with_preview(self, call, text: str, reply_markup: list, banner_url: str = None):
+        if banner_url:
+            text = f'<a href="{banner_url}">&#8203;</a>{text}'
+            lo = LinkPreviewOptions(url=banner_url, show_above_text=True, prefer_large_media=True)
+        else:
+            lo = LinkPreviewOptions(is_disabled=True)
+            
+        markup = self.inline.generate_markup(reply_markup)
+        
+        try:
+            inline_msg_id = getattr(call, "inline_message_id", None)
+            if inline_msg_id:
+                await self.inline.bot.edit_message_text(
+                    inline_message_id=inline_msg_id,
+                    text=text,
+                    reply_markup=markup,
+                    link_preview_options=lo,
+                    parse_mode="HTML"
+                )
+            elif getattr(call, "message", None):
+                await self.inline.bot.edit_message_text(
+                    chat_id=call.message.chat.id,
+                    message_id=call.message.message_id,
+                    text=text,
+                    reply_markup=markup,
+                    link_preview_options=lo,
+                    parse_mode="HTML"
+                )
+        except Exception:
+            pass
+
     async def _show_list_cb(self, call, idx: int, mods: List, query: str):
         try:
-            await call.edit(
-                text=self.strings["modules_list"].format(emoji=self._get_emoji("modules_list")),
-                reply_markup=self._mk_list_btns(mods, query, 0, idx)
-            )
+            await call.answer()
         except:
             pass
+        
+        await self._edit_with_preview(
+            call,
+            text=self.strings["modules_list"].format(emoji=self._get_emoji("modules_list")),
+            reply_markup=self._mk_list_btns(mods, query, 0, idx),
+            banner_url=None
+        )
 
     async def _list_page_cb(self, call, page: int, mods: List, query: str, current_idx: int):
         try:
-            await call.edit(
-                text=self.strings["modules_list"].format(emoji=self._get_emoji("modules_list")),
-                reply_markup=self._mk_list_btns(mods, query, page, current_idx)
-            )
+            await call.answer()
         except:
             pass
+            
+        await self._edit_with_preview(
+            call,
+            text=self.strings["modules_list"].format(emoji=self._get_emoji("modules_list")),
+            reply_markup=self._mk_list_btns(mods, query, page, current_idx),
+            banner_url=None
+        )
 
     async def _select_from_list_cb(self, call, idx: int, mods: List, query: str):
         try:
@@ -641,16 +843,14 @@ class FHeta(loader.Module):
         
         mod = mods[idx]
         install = mod.get('install', '')
+        stats = mod if all(k in mod for k in['likes', 'dislikes']) else {"likes": 0, "dislikes": 0}
         
-        stats = mod if all(k in mod for k in ['likes', 'dislikes']) else {"likes": 0, "dislikes": 0}
-        
-        try:
-            await call.edit(
-                text=self._fmt_mod(mod, query, idx + 1, len(mods)),
-                reply_markup=self._mk_btns(install, stats, idx, mods, query)
-            )
-        except:
-            pass
+        await self._edit_with_preview(
+            call,
+            text=self._fmt_mod(mod, query, idx + 1, len(mods)),
+            reply_markup=self._mk_btns(install, stats, idx, mods, query),
+            banner_url=mod.get("banner")
+        )
 
     async def _close_list_cb(self, call, idx: int, mods: List, query: str):
         try:
@@ -663,16 +863,14 @@ class FHeta(loader.Module):
         
         mod = mods[idx]
         install = mod.get('install', '')
+        stats = mod if all(k in mod for k in['likes', 'dislikes']) else {"likes": 0, "dislikes": 0}
         
-        stats = mod if all(k in mod for k in ['likes', 'dislikes']) else {"likes": 0, "dislikes": 0}
-        
-        try:
-            await call.edit(
-                text=self._fmt_mod(mod, query, idx + 1, len(mods)),
-                reply_markup=self._mk_btns(install, stats, idx, mods, query)
-            )
-        except:
-            pass
+        await self._edit_with_preview(
+            call,
+            text=self._fmt_mod(mod, query, idx + 1, len(mods)),
+            reply_markup=self._mk_btns(install, stats, idx, mods, query),
+            banner_url=mod.get("banner")
+        )
 
     async def _rate_cb(self, call, install: str, action: str, idx: int, mods: Optional[List], query: str = ""):
         result = await self._api_post(f"rate/{self.uid}/{install}/{action}")
@@ -758,7 +956,7 @@ class FHeta(loader.Module):
                         return
                 
                 elif isinstance(result, dict) and result.get("type") == "requirements_error":
-                    deps = result.get("deps", [])
+                    deps = result.get("deps",[])
                     if deps:
                         deps_text = ", ".join(deps[:5])
                         try:
@@ -830,16 +1028,14 @@ class FHeta(loader.Module):
         
         mod = mods[idx]
         install = mod.get('install', '')
+        stats = mod if all(k in mod for k in['likes', 'dislikes']) else {"likes": 0, "dislikes": 0}
         
-        stats = mod if all(k in mod for k in ['likes', 'dislikes']) else {"likes": 0, "dislikes": 0}
-        
-        try:
-            await call.edit(
-                text=self._fmt_mod(mod, query, idx + 1, len(mods)),
-                reply_markup=self._mk_btns(install, stats, idx, mods, query)
-            )
-        except:
-            pass
+        await self._edit_with_preview(
+            call,
+            text=self._fmt_mod(mod, query, idx + 1, len(mods)),
+            reply_markup=self._mk_btns(install, stats, idx, mods, query),
+            banner_url=mod.get("banner")
+        )
 
     @loader.inline_handler(
         ru_doc="(запрос) - поиск модулей.",
@@ -852,7 +1048,14 @@ class FHeta(loader.Module):
     )
     async def fheta(self, query):
         '''(query) - search modules.'''
-        if not query.args:
+        actual_query = query.args
+        is_cmd = False
+
+        if actual_query.startswith("__cmd__ "):
+            is_cmd = True
+            actual_query = actual_query[8:]
+
+        if not actual_query:
             return {
                 "title": self.strings["inline_no_query"],
                 "description": self.strings["inline_desc"],
@@ -860,7 +1063,7 @@ class FHeta(loader.Module):
                 "thumb": "https://raw.githubusercontent.com/Fixyres/FModules/refs/heads/main/assets/FHeta/magnifying_glass.png",
             }
 
-        if len(query.args) > 168:
+        if len(actual_query) > 168:
             return {
                 "title": self.strings["inline_query_too_big"],
                 "description": self.strings["inline_no_results"],
@@ -868,7 +1071,7 @@ class FHeta(loader.Module):
                 "thumb": "https://raw.githubusercontent.com/Fixyres/FModules/refs/heads/main/assets/FHeta/try_other_query.png",
             }
 
-        mods = await self._api_get("search", query=query.args, inline="true", token=self.token, user_id=self.uid, ood=str(self.config["only_official_developers"]).lower())
+        mods = await self._api_get("search", query=actual_query, inline="true", token=self.token, user_id=self.uid, ood=str(self.config["only_official_developers"]).lower())
         
         if not mods or not isinstance(mods, list):
             return {
@@ -880,7 +1083,7 @@ class FHeta(loader.Module):
 
         results = []
         
-        for mod in mods[:50]:
+        for i, mod in enumerate(mods[:50]):
             stats = {
                 "likes": mod.get('likes', 0),
                 "dislikes": mod.get('dislikes', 0)
@@ -889,16 +1092,35 @@ class FHeta(loader.Module):
             desc = mod.get("description", "")
             if isinstance(desc, dict):
                 desc = desc.get(self.strings["lang"]) or desc.get("doc") or next(iter(desc.values()), "")
-                
-            results.append({
-                "title": utils.escape_html(mod.get("name", "")),
-                "description": utils.escape_html(str(desc)),
-                "thumb": mod.get("pic") or "https://raw.githubusercontent.com/Fixyres/FModules/refs/heads/main/assets/FHeta/empty_pic.png",
-                "message": self._fmt_mod(mod, query.args, inline=True),
-                "reply_markup": self._mk_btns(mod.get("install", ""), stats, 0, None, query.args),
-            })
+            
+            msg_text = self._fmt_mod(mod, actual_query, i + 1 if is_cmd else 1, len(mods) if is_cmd else 1, inline=True)
+            banner_url = mod.get("banner")
+            
+            if banner_url:
+                msg_text = f'<a href="{banner_url}">&#8203;</a>{msg_text}'
+                lo = LinkPreviewOptions(url=banner_url, show_above_text=True, prefer_large_media=True)
+            else:
+                lo = LinkPreviewOptions(is_disabled=True)
 
-        return results
+            results.append(
+                InlineQueryResultArticle(
+                    id=utils.rand(20),
+                    title=utils.escape_html(mod.get("name", "")),
+                    description=utils.escape_html(str(desc)),
+                    thumbnail_url=mod.get("pic") or "https://raw.githubusercontent.com/Fixyres/FModules/refs/heads/main/assets/FHeta/empty_pic.png",
+                    input_message_content=InputTextMessageContent(
+                        message_text=msg_text,
+                        parse_mode="HTML",
+                        link_preview_options=lo
+                    ),
+                    reply_markup=self.inline.generate_markup(
+                        self._mk_btns(mod.get("install", ""), stats, i if is_cmd else 0, mods if is_cmd else None, actual_query)
+                    )
+                )
+            )
+
+        await query.inline_query.answer(results, cache_time=0)
+        return None
 
     @loader.command(
         ru_doc="(запрос) - поиск модулей.",
@@ -922,26 +1144,23 @@ class FHeta(loader.Module):
             return
 
         status_msg = await utils.answer(message, self.strings["searching"].format(emoji=self._get_emoji("search"), query=utils.escape_html(query)))
-        mods = await self._api_get("search", query=query, inline="false", token=self.token, user_id=self.uid, ood=str(self.config["only_official_developers"]).lower())
-
-        if not mods or not isinstance(mods, list):
-            await utils.answer(message, self.strings["no_results"].format(emoji=self._get_emoji("error"), query=utils.escape_html(query)))
-            return
-
-        first_mod = mods[0]
         
-        stats = {
-            "likes": first_mod.get('likes', 0),
-            "dislikes": first_mod.get('dislikes', 0)
-        }
+        try:
+            results = await self._client.inline_query(self.inline.bot_username, f"fheta __cmd__ {query}")
+            if results:
+                await results[0].click(
+                    utils.get_chat_id(message),
+                    reply_to=message.reply_to_msg_id
+                )
+                
+                await message.delete()
+                if status_msg and status_msg.id != message.id:
+                    await status_msg.delete()
+                return
+        except Exception:
+            pass
 
-        await self.inline.form(
-            message=message,
-            text=self._fmt_mod(first_mod, query, 1, len(mods)),
-            reply_markup=self._mk_btns(first_mod.get("install", ""), stats, 0, mods if len(mods) > 1 else None, query)
-        )
-        
-        await status_msg.delete()
+        await utils.answer(message, self.strings["no_results"].format(emoji=self._get_emoji("error"), query=utils.escape_html(query)))
 
     @loader.watcher(chat_id=7575472403)
     async def _install_via_fheta(self, message):
@@ -997,7 +1216,7 @@ class FHeta(loader.Module):
                             return
                     
                     elif isinstance(result, dict) and result.get("type") == "requirements_error":
-                        deps = result.get("deps", [])
+                        deps = result.get("deps",[])
                         if deps:
                             deps_text = ",".join(deps[:5])
                             status_msg = await message.respond(f"📋{deps_text}")
