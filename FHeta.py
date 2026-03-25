@@ -1032,21 +1032,28 @@ class FHeta(loader.Module):
             if isinstance(desc, dict):
                 desc = desc.get(self.strings["lang"]) or desc.get("doc") or next(iter(desc.values()), "")
             
-            msg_text = self._fmt_mod(mod, actual_query, i + 1 if is_cmd else 1, len(mods) if is_cmd else 1, inline=True)
-            banner_url = mod.get("banner")
+            desc_str = str(desc)
+            inline_desc = desc_str[:250] + "..." if len(desc_str) > 250 else desc_str
             
-            if banner_url:
-                msg_text = f'<a href="{banner_url}">&#8203;</a>{msg_text}'
-                lo = LinkPreviewOptions(url=banner_url, show_above_text=True, prefer_large_media=True)
+            msg_text = self._fmt_mod(mod, actual_query, i + 1 if is_cmd else 1, len(mods) if is_cmd else 1, inline=True)
+            banner = mod.get("banner")
+            
+            if banner:
+                msg_text = f'<a href="{banner}">&#8203;</a>{msg_text}'
+                lo = LinkPreviewOptions(url=banner, show_above_text=True, prefer_large_media=True)
             else:
                 lo = LinkPreviewOptions(is_disabled=True)
+
+            pic = mod.get("pic")
+            if not pic:
+                pic = "https://raw.githubusercontent.com/Fixyres/FModules/refs/heads/main/assets/FHeta/empty_pic.png"
 
             results.append(
                 InlineQueryResultArticle(
                     id=utils.rand(20),
                     title=utils.escape_html(mod.get("name", "")),
-                    description=utils.escape_html(str(desc)),
-                    thumbnail_url=mod.get("pic") or "https://raw.githubusercontent.com/Fixyres/FModules/refs/heads/main/assets/FHeta/empty_pic.png",
+                    description=utils.escape_html(inline_desc),
+                    thumbnail_url=pic,
                     input_message_content=InputTextMessageContent(
                         message_text=msg_text,
                         parse_mode="HTML",
