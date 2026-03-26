@@ -1016,7 +1016,7 @@ class FHeta(loader.Module):
             return {
                 "title": self.strings["inline_no_results"],
                 "description": self.strings["inline_desc"],
-                "message": self.strings["inline_no_results"].format(emoji=self._get_emoji("error")),
+                "message": self.strings["no_results"].format(emoji=self._get_emoji("error"), query=utils.escape_html(actual_query)),
                 "thumb": "https://raw.githubusercontent.com/Fixyres/FModules/refs/heads/main/assets/FHeta/try_other_query.png",
             }
 
