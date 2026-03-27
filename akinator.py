@@ -342,7 +342,7 @@ class AkinatorMod(loader.Module):
             aki = AsyncAki(self.strings("lang"), self.config["child_mode"])
             await aki.start()
             
-            self.games[message.chat_id] = {message.id: aki}
+            self.games.setdefault(message.chat_id, {})[message.id] = aki
             
             await self.inline.form(
                 text=self.strings("text"),
@@ -453,4 +453,4 @@ class AkinatorMod(loader.Module):
                 self.strings("failed"),
                 photo="https://raw.githubusercontent.com/Fixyres/FModules/refs/heads/main/assets/akinator/idk.png",
                 reply_markup=[]
-        )
+            )
