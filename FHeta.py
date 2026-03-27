@@ -945,7 +945,7 @@ class FHeta(loader.Module):
             return {
                 "title": self.strings["inline_no_results"],
                 "description": self.strings["inline_desc"],
-                "message": self.strings["no_results"].format(emoji=self._get_emoji("error"), query=utils.escape_html(actual_query)),
+                "message": self.strings["inline_no_results"],
                 "thumb": "https://raw.githubusercontent.com/Fixyres/FModules/refs/heads/main/assets/FHeta/try_other_query.png",
             }
 
@@ -1018,21 +1018,31 @@ class FHeta(loader.Module):
             await utils.answer(message, self.strings["query_too_big"].format(emoji=self._get_emoji("warn")))
             return
 
-        status_msg = await utils.answer(message, self.strings["searching"].format(emoji=self._get_emoji("search"), query=utils.escape_html(query)))
+        await utils.answer(message, self.strings["searching"].format(emoji=self._get_emoji("search"), query=utils.escape_html(query)))
         
         try:
             results = await self._client.inline_query(self.inline.bot_username, f"fheta __cmd__ {query}")
+            
             if results:
+                if results[0].title == self.strings["inline_no_results"]:
+                    await utils.answer(
+                        message, 
+                        self.strings["no_results"].format(
+                            emoji=self._get_emoji("error"), 
+                            query=utils.escape_html(query)
+                        )
+                    )
+                    return
+
                 await results[0].click(
                     utils.get_chat_id(message),
                     reply_to=message.reply_to_msg_id
                 )
                 
                 await message.delete()
-                if status_msg and status_msg.id != message.id:
-                    await status_msg.delete()
                 return
-        except Exception:
+                
+        except:
             pass
 
         await utils.answer(message, self.strings["no_results"].format(emoji=self._get_emoji("error"), query=utils.escape_html(query)))
