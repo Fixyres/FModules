@@ -10,10 +10,10 @@ __version__ = (1, 0, 0)
 # meta developer: @FModules
 
 from .. import loader, utils
+from urllib.parse import urlparse, parse_qs
 
 async def extract_code(value: str) -> str:
     if value.startswith("http"):
-        from urllib.parse import urlparse, parse_qs
         tags = parse_qs(urlparse(value).query).get("tag")
         return tags[0] if tags else value
     return value
