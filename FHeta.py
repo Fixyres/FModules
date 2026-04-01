@@ -421,7 +421,7 @@ class FHeta(loader.Module):
             try:
                 cl = self.strings["lang"]
                 if cl != ll:
-                    await self._api_post("dataset", user_id=self.uid, lang=cl)
+                    await self._api_post("dataset", params={"user_id": self.uid, "lang": cl})
                     ll = cl
             except Exception:
                 pass
