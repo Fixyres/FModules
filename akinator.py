@@ -7,7 +7,6 @@ __version__ = (1, 1, 0)
 # 🔑 http://www.apache.org/licenses/LICENSE-2.0
 
 # meta banner: https://raw.githubusercontent.com/Fixyres/FModules/refs/heads/main/assets/akinator/banner.png
-# meta pic: https://raw.githubusercontent.com/Fixyres/FModules/refs/heads/main/assets/akinator/pic.png
 # meta developer: @FModules
 
 # requires: curl_cffi
@@ -164,7 +163,7 @@ class AsyncAki:
 
 
 @loader.tds
-class AkinatorMod(loader.Module):
+class Akinator(loader.Module):
     '''Akinator will guess any character you have in mind, you just need to answer a couple of questions.'''
 
     strings = {
