@@ -461,8 +461,7 @@ class FHeta(loader.Module):
 
     def _fmt_mod(self, mod: Dict, query: str = "", idx: int = 1, total: int = 1, inline: bool = False) -> str:
         version = mod.get("version", "?.?.?")
-        has_banner = bool(mod.get("banner"))
-        limit = 950 if has_banner else 3700
+        limit = 3700
         
         if version and version != "?.?.?":
             info = self.strings["module_info_version"].format(
@@ -486,8 +485,6 @@ class FHeta(loader.Module):
                 text = desc
             
             text = str(text)
-            if has_banner and len(text) > 400:
-                text = text[:400] + "..."
             
             info += self.strings["desc"].format(desc=utils.escape_html(text), emoji=self._get_emoji("description"))
 
