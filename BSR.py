@@ -8,6 +8,7 @@ __version__ = (1, 0, 0)
 
 # meta banner: https://raw.githubusercontent.com/Fixyres/FModules/refs/heads/main/assets/BSR/banner.png
 # meta developer: @FModules
+# meta fhsdesc: brawlstars, game, funny
 
 from .. import loader, utils
 from urllib.parse import urlparse, parse_qs
