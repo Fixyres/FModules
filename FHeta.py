@@ -3,7 +3,7 @@ __version__ = (9, 3, 7)
 # meta developer: @FModules
 # meta pic: https://raw.githubusercontent.com/Fixyres/FModules/refs/heads/main/assets/FHeta/logo.png
 # meta banner: https://raw.githubusercontent.com/Fixyres/FModules/refs/heads/main/assets/FHeta/logo.png
-# scope: hikka_min 2.0.0
+# scope: hikka_min 1.7.2
 
 # ©️ Fixyres, 2024-2030
 # 🌐 https://github.com/Fixyres/FModules
