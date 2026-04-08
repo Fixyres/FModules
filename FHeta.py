@@ -3,7 +3,7 @@ __version__ = (9, 3, 8)
 # meta developer: @FModules
 # meta pic: https://raw.githubusercontent.com/Fixyres/FModules/refs/heads/main/assets/FHeta/logo.png
 # meta banner: https://raw.githubusercontent.com/Fixyres/FModules/refs/heads/main/assets/FHeta/logo.png
-# scope: hikka_min 2.0.0
+# scope: hikka_min 1.7.2
 
 # ©️ Fixyres, 2024-2030
 # 🌐 https://github.com/Fixyres/FModules
@@ -50,6 +50,10 @@ class FHeta(loader.Module):
         "rating_added": "✔ Rating submitted!",
         "rating_changed": "✔ Rating has been changed!",
         "rating_removed": "✔ Rating deleted!",
+        "inline_no_query": "Enter a query to search.",
+        "inline_desc": "Name, command, description, author.",
+        "inline_no_results": "Try another query.",
+        "inline_query_too_big": "Your query is too big, please try reducing it to 168 characters.",
         "query_label": "Query",
         "install_btn": "Install",
         "results_count": "{idx}/{total}",
@@ -82,6 +86,10 @@ class FHeta(loader.Module):
         "rating_added": "✔ Оценка добавлена!",
         "rating_changed": "✔ Оценка изменена!",
         "rating_removed": "✔ Оценка удалена!",
+        "inline_no_query": "Введите запрос для поиска.",
+        "inline_desc": "Название, команда, описание, автор.",
+        "inline_no_results": "Попробуйте другой запрос.",
+        "inline_query_too_big": "Ваш запрос слишком большой, пожалуйста, сократите его до 168 символов.",
         "query_label": "Запрос",
         "install_btn": "Установить",
         "join_channel": "{emoji} Это канал со всеми обновлениями FHeta!",
@@ -113,6 +121,10 @@ class FHeta(loader.Module):
         "rating_added": "✔ Оцінку додано!",
         "rating_changed": "✔ Оцінку змінено!",
         "rating_removed": "✔ Оцінку видалено!",
+        "inline_no_query": "Введіть запит для пошуку.",
+        "inline_desc": "Назва, команда, опис, автор.",
+        "inline_no_results": "Спробуйте інший запит.",
+        "inline_query_too_big": "Ваш запит занадто великий, будь ласка, скоротіть його до 168 символів.",
         "query_label": "Запит",
         "install_btn": "Встановити",
         "join_channel": "{emoji} Це канал з усіма оновленнями FHeta!",
@@ -144,6 +156,10 @@ class FHeta(loader.Module):
         "rating_added": "✔ Бағалау қосылды!",
         "rating_changed": "✔ Бағалау өзгертілді!",
         "rating_removed": "✔ Бағалау жойылды!",
+        "inline_no_query": "Іздеу үшін сұрау енгізіңіз.",
+        "inline_desc": "Атауы, команда, сипаттама, автор.",
+        "inline_no_results": "Басқа сұрауды қолданып көріңіз.",
+        "inline_query_too_big": "Сіздің сұрауыңыз тым үлкен, оны 168 таңбаға дейін қысқартыңыз.",
         "query_label": "Сұрау",
         "install_btn": "Орнату",
         "join_channel": "{emoji} Бұл FHeta барлық жаңартулары бар арна!",
@@ -175,6 +191,10 @@ class FHeta(loader.Module):
         "rating_added": "✔ Reyting qo'shildi!",
         "rating_changed": "✔ Reyting o'zgartirildi!",
         "rating_removed": "✔ Reyting o'chirildi!",
+        "inline_no_query": "Qidirish uchun so'rov kiriting.",
+        "inline_desc": "Nomi, buyruq, tavsif, muallif.",
+        "inline_no_results": "Boshqa so'rovni sinab ko'ring.",
+        "inline_query_too_big": "Sizning so'rovingiz juda katta, iltimos uni 168 belgigacha qisqartiring.",
         "query_label": "So'rov",
         "install_btn": "O'rnatish",
         "join_channel": "{emoji} Bu FHeta barcha yangilanishlari bo'lgan kanal!",
@@ -206,6 +226,10 @@ class FHeta(loader.Module):
         "rating_added": "✔ Note ajoutée!",
         "rating_changed": "✔ Note modifiée!",
         "rating_removed": "✔ Note supprimée!",
+        "inline_no_query": "Entrez une requête pour rechercher.",
+        "inline_desc": "Nom, commande, description, auteur.",
+        "inline_no_results": "Essayez une autre requête.",
+        "inline_query_too_big": "Votre requête est trop longue, veuillez la réduire à 168 caractères.",
         "query_label": "Requête",
         "install_btn": "Installer",
         "join_channel": "{emoji} C'est le canal avec toutes les mises à jour de FHeta!",
@@ -237,6 +261,10 @@ class FHeta(loader.Module):
         "rating_added": "✔ Bewertung hinzugefügt!",
         "rating_changed": "✔ Bewertung geändert!",
         "rating_removed": "✔ Bewertung gelöscht!",
+        "inline_no_query": "Geben Sie eine Suchanfrage ein.",
+        "inline_desc": "Name, Befehl, Beschreibung, Autor.",
+        "inline_no_results": "Versuchen Sie eine andere Anfrage.",
+        "inline_query_too_big": "Ihre Anfrage ist zu groß, bitte reduzieren Sie sie auf 168 Zeichen.",
         "query_label": "Anfrage",
         "install_btn": "Installieren",
         "join_channel": "{emoji} Dies ist der Kanal mit allen FHeta-Updates!",
@@ -268,6 +296,10 @@ class FHeta(loader.Module):
         "rating_added": "✔ 評価が追加されました！",
         "rating_changed": "✔ 評価が変更されました！",
         "rating_removed": "✔ 評価が削除されました！",
+        "inline_no_query": "検索するクエリを入力してください。",
+        "inline_desc": "名前、コマンド、説明、作成者。",
+        "inline_no_results": "別のクエリを試してください。",
+        "inline_query_too_big": "クエリが大きすぎます。168文字に短縮してください。",
         "query_label": "クエリ",
         "install_btn": "インストール",
         "join_channel": "{emoji} これはFHetaのすべての更新があるチャンネルです！",
@@ -603,36 +635,6 @@ class FHeta(loader.Module):
         
         return buttons
 
-    async def _on_click(self, chosen):
-        if not getattr(chosen, "result_id", "").startswith("fheta_"):
-            return
-            
-        cache_key = chosen.result_id.split("_")[1]
-        
-        cached_data = getattr(self, "fhc", {}).get(cache_key)
-        
-        if hasattr(self, "fhc"):
-            self.fhc.clear()
-            
-        if not cached_data:
-            return
-            
-        query, idx, mods = cached_data
-        mod = mods[idx]
-        
-        stats = {"likes": mod.get('likes', 0), "dislikes": mod.get('dislikes', 0)}
-        text = self._fmt_mod(mod, query, 1, 1, inline=True)
-        install = mod.get("install", "")
-        buttons = self._mk_btns(install, stats, 0, None, query)
-        
-        if getattr(chosen, "inline_message_id", None):
-            await self._edit_with_preview(
-                chosen.inline_message_id,
-                text=text,
-                reply_markup=buttons,
-                banner_url=mod.get("banner")
-            )
-            
     async def _edit_with_preview(self, call_or_msg_id, text: str, reply_markup: list, banner_url: str = None):
         if banner_url:
             lo = LinkPreviewOptions(url=banner_url, show_above_text=True, prefer_large_media=True)
@@ -899,6 +901,97 @@ class FHeta(loader.Module):
             reply_markup=self._mk_btns(install, stats, idx, mods, query),
             banner_url=mod.get("banner")
         )
+
+    @loader.inline_handler(
+        ru_doc="(запрос) - поиск модулей.",
+        ua_doc="(запит) - пошук модулів.",
+        kz_doc="(сұрау) - модульдерді іздеу.",
+        uz_doc="(so'rov) - modullarni qidirish.",
+        fr_doc="(requête) - rechercher des modules.",
+        de_doc="(anfrage) - module suchen.",
+        jp_doc="(クエリ) - モジュールを検索します。"
+    )
+    async def fheta(self, query):
+        '''(query) - search modules.'''
+        actual_query = query.args
+        is_cmd = False
+
+        if actual_query.startswith("__cmd__ "):
+            is_cmd = True
+            actual_query = actual_query[8:]
+
+        if not actual_query:
+            return {
+                "title": self.strings["inline_no_query"],
+                "description": self.strings["inline_desc"],
+                "message": self.strings["inline_no_query"].format(emoji=self._get_emoji("error")),
+                "thumb": "https://raw.githubusercontent.com/Fixyres/FModules/refs/heads/main/assets/FHeta/magnifying_glass.png",
+            }
+
+        if len(actual_query) > 168:
+            return {
+                "title": self.strings["inline_query_too_big"],
+                "description": self.strings["inline_no_results"],
+                "message": self.strings["query_too_big"].format(emoji=self._get_emoji("warn")),
+                "thumb": "https://raw.githubusercontent.com/Fixyres/FModules/refs/heads/main/assets/FHeta/try_other_query.png",
+            }
+
+        mods = await self._api_get("search", query=actual_query, inline="true", token=self.token, user_id=self.uid, ood=str(self.config["only_official_developers"]).lower())
+        
+        if not mods or not isinstance(mods, list):
+            return {
+                "title": self.strings["inline_no_results"],
+                "description": self.strings["inline_desc"],
+                "message": self.strings["inline_no_results"],
+                "thumb": "https://raw.githubusercontent.com/Fixyres/FModules/refs/heads/main/assets/FHeta/try_other_query.png",
+            }
+
+        results = []
+        
+        for i, mod in enumerate(mods[:50]):
+            stats = {
+                "likes": mod.get('likes', 0),
+                "dislikes": mod.get('dislikes', 0)
+            }
+            
+            desc = mod.get("description", "")
+            if isinstance(desc, dict):
+                desc = desc.get(self.strings["lang"]) or desc.get("doc") or next(iter(desc.values()), "")
+            
+            desc_str = str(desc)
+            inline_desc = desc_str[:250] + "..." if len(desc_str) > 250 else desc_str
+            
+            msg_text = self._fmt_mod(mod, actual_query, i + 1 if is_cmd else 1, len(mods) if is_cmd else 1, inline=True)
+            banner = mod.get("banner")
+            
+            if banner:
+                lo = LinkPreviewOptions(url=banner, show_above_text=True, prefer_large_media=True)
+            else:
+                lo = LinkPreviewOptions(is_disabled=True)
+
+            pic = mod.get("pic")
+            if not pic:
+                pic = "https://raw.githubusercontent.com/Fixyres/FModules/refs/heads/main/assets/FHeta/empty_pic.png"
+
+            results.append(
+                InlineQueryResultArticle(
+                    id=utils.rand(20),
+                    title=utils.escape_html(mod.get("name", "")),
+                    description=utils.escape_html(inline_desc),
+                    thumbnail_url=pic,
+                    input_message_content=InputTextMessageContent(
+                        message_text=msg_text,
+                        parse_mode="HTML",
+                        link_preview_options=lo
+                    ),
+                    reply_markup=self.inline.generate_markup(
+                        self._mk_btns(mod.get("install", ""), stats, i if is_cmd else 0, mods if is_cmd else None, actual_query)
+                    )
+                )
+            )
+
+        await query.inline_query.answer(results, cache_time=0)
+        return None
 
     @loader.command(
         ru_doc="(запрос) - поиск модулей.",
