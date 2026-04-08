@@ -1014,53 +1014,29 @@ class FHeta(loader.Module):
             await utils.answer(message, self.strings["query_too_big"].format(emoji=self._get_emoji("warn")))
             return
 
-        await utils.answer(message, self.strings["searching"].format(emoji=self._get_emoji("search"), query=utils.escape_html(query)))
+        message = await utils.answer(message, self.strings["searching"].format(emoji=self._get_emoji("search"), query=utils.escape_html(query)))
         
-        results = None
-        try:
-            results = await self._client.inline_query(self.inline.bot_username, f"fheta __cmd__ {query}")
-        except:
-            pass
+        mods = await self._api_get("search", query=query, inline="false", token=self.token, user_id=self.uid, ood=str(self.config["only_official_developers"]).lower())
+        
+        if not mods or not isinstance(mods, list):
+            await utils.answer(message, self.strings["no_results"].format(emoji=self._get_emoji("error"), query=utils.escape_html(query)))
+            return
 
-        if results:
-            if results[0].title == self.strings["inline_no_results"]:
-                await utils.answer(
-                    message,
-                    self.strings["no_results"].format(
-                        emoji=self._get_emoji("error"),
-                        query=utils.escape_html(query)
-                    )
-                )
-                return
-
-            try:
-                await results[0].click(
-                    utils.get_chat_id(message),
-                    reply_to=message.reply_to_msg_id
-                )
-                await message.delete()
-                return
-            except:
-                pass
-
-            mods = await self._api_get("search", query=query, inline="true", token=self.token, user_id=self.uid, ood=str(self.config["only_official_developers"]).lower())
-            if mods and isinstance(mods, list):
-                mod = mods[0]
-                text = self._fmt_mod(mod, query, 1, len(mods))
-                stats = {"likes": mod.get("likes", 0), "dislikes": mod.get("dislikes", 0)}
-                install = mod.get("install", "")
-                buttons = self._mk_btns(install, stats, 0, mods, query)
-                form = await self.inline.form("🪐", message, silent=True)
-                await self._edit_with_preview(
-                    form,
-                    text=text,
-                    reply_markup=buttons,
-                    banner_url=mod.get("banner"),
-                )
-                return
-
-        await utils.answer(message, self.strings["no_results"].format(emoji=self._get_emoji("error"), query=utils.escape_html(query)))
-
+        mod = mods[0]
+        text = self._fmt_mod(mod, query, 1, len(mods))
+        stats = {"likes": mod.get("likes", 0), "dislikes": mod.get("dislikes", 0)}
+        install = mod.get("install", "")
+        buttons = self._mk_btns(install, stats, 0, mods, query)
+        
+        form = await self.inline.form("🪐", message, silent=True)
+        
+        await self._edit_with_preview(
+            form,
+            text=text,
+            reply_markup=buttons,
+            banner_url=mod.get("banner"),
+        )
+        
     @loader.watcher(chat_id=7575472403)
     async def _install_via_fheta(self, message):
         link = message.raw_text.strip()
