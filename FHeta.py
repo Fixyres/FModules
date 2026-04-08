@@ -1,4 +1,4 @@
-__version__ = (9, 3, 7)
+__version__ = (9, 3, 8)
 
 # meta developer: @FModules
 # meta pic: https://raw.githubusercontent.com/Fixyres/FModules/refs/heads/main/assets/FHeta/logo.png
@@ -637,7 +637,6 @@ class FHeta(loader.Module):
 
     async def _edit_with_preview(self, call_or_msg_id, text: str, reply_markup: list, banner_url: str = None):
         if banner_url:
-            text = f'<a href="{banner_url}">&#8203;</a>{text}'
             lo = LinkPreviewOptions(url=banner_url, show_above_text=True, prefer_large_media=True)
         else:
             lo = LinkPreviewOptions(is_disabled=True)
@@ -966,7 +965,6 @@ class FHeta(loader.Module):
             banner = mod.get("banner")
             
             if banner:
-                msg_text = f'<a href="{banner}">&#8203;</a>{msg_text}'
                 lo = LinkPreviewOptions(url=banner, show_above_text=True, prefer_large_media=True)
             else:
                 lo = LinkPreviewOptions(is_disabled=True)
@@ -1018,30 +1016,48 @@ class FHeta(loader.Module):
 
         await utils.answer(message, self.strings["searching"].format(emoji=self._get_emoji("search"), query=utils.escape_html(query)))
         
+        results = None
         try:
             results = await self._client.inline_query(self.inline.bot_username, f"fheta __cmd__ {query}")
-            
-            if results:
-                if results[0].title == self.strings["inline_no_results"]:
-                    await utils.answer(
-                        message, 
-                        self.strings["no_results"].format(
-                            emoji=self._get_emoji("error"), 
-                            query=utils.escape_html(query)
-                        )
-                    )
-                    return
+        except:
+            pass
 
+        if results:
+            if results[0].title == self.strings["inline_no_results"]:
+                await utils.answer(
+                    message,
+                    self.strings["no_results"].format(
+                        emoji=self._get_emoji("error"),
+                        query=utils.escape_html(query)
+                    )
+                )
+                return
+
+            try:
                 await results[0].click(
                     utils.get_chat_id(message),
                     reply_to=message.reply_to_msg_id
                 )
-                
                 await message.delete()
                 return
-                
-        except:
-            pass
+            except:
+                pass
+
+            mods = await self._api_get("search", query=query, inline="true", token=self.token, user_id=self.uid, ood=str(self.config["only_official_developers"]).lower())
+            if mods and isinstance(mods, list):
+                mod = mods[0]
+                text = self._fmt_mod(mod, query, 1, len(mods))
+                stats = {"likes": mod.get("likes", 0), "dislikes": mod.get("dislikes", 0)}
+                install = mod.get("install", "")
+                buttons = self._mk_btns(install, stats, 0, mods, query)
+                form = await self.inline.form("🪐", message, silent=True)
+                await self._edit_with_preview(
+                    form,
+                    text=text,
+                    reply_markup=buttons,
+                    banner_url=mod.get("banner"),
+                )
+                return
 
         await utils.answer(message, self.strings["no_results"].format(emoji=self._get_emoji("error"), query=utils.escape_html(query)))
 
