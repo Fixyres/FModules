@@ -3,7 +3,7 @@ __version__ = (9, 3, 8)
 # meta developer: @FModules
 # meta pic: https://raw.githubusercontent.com/Fixyres/FModules/refs/heads/main/assets/FHeta/logo.png
 # meta banner: https://raw.githubusercontent.com/Fixyres/FModules/refs/heads/main/assets/FHeta/logo.png
-# scope: hikka_min 1.7.2
+# scope: hikka_min 2.0.0
 
 # ©️ Fixyres, 2024-2030
 # 🌐 https://github.com/Fixyres/FModules
@@ -373,6 +373,7 @@ class FHeta(loader.Module):
     }
     
     def __init__(self):
+        self.fhc = {}
         self.config = loader.ModuleConfig(
             loader.ConfigValue(
                 "only_official_developers",
@@ -399,6 +400,49 @@ class FHeta(loader.Module):
         self.token = db.get("FHeta", "token")
         self._asession = aiohttp.ClientSession()
         
+        real_inline = None
+        try:
+            frame = sys._getframe()
+            while frame:
+                if 'self' in frame.f_locals:
+                    obj = frame.f_locals['self']
+                    if type(obj).__name__ == "Modules":
+                        real_inline = getattr(obj, "inline", None)
+                        if real_inline:
+                            break
+                frame = frame.f_back
+        except Exception:
+            pass
+
+        if not real_inline:
+            real_inline = self.inline
+                
+        dp = getattr(real_inline, "_dp", getattr(real_inline, "dp", getattr(real_inline, "router", None)))
+        self.real_bot = getattr(real_inline, "_bot", getattr(real_inline, "bot", getattr(self.inline, "bot", None)))
+
+        if dp:
+            try:
+                async def fheta_middleware(handler, event, data):
+                    if self.lookup("FHeta") is not self:
+                        return await handler(event, data)
+
+                    if getattr(event, "result_id", "").startswith("fh_"):
+                        try:
+                            await self._on_click(event)
+                        except Exception:
+                            pass
+                        return None
+                    return await handler(event, data)
+                
+                try:
+                    dp.chosen_inline_result.middlewares.clear()
+                except Exception:
+                    pass
+
+                dp.chosen_inline_result.middleware(fheta_middleware)
+            except Exception:
+                pass
+
         if self.token:
             result = await self._api_get("validatetkn", user_id=str(self.uid))
             if result == False:
@@ -635,17 +679,62 @@ class FHeta(loader.Module):
         
         return buttons
 
-    async def _edit_with_preview(self, call_or_msg_id, text: str, reply_markup: list, banner_url: str = None):
-        if banner_url:
-            lo = LinkPreviewOptions(url=banner_url, show_above_text=True, prefer_large_media=True)
-        else:
-            lo = LinkPreviewOptions(is_disabled=True)
-            
-        markup = self.inline.generate_markup(reply_markup)
-        
+    async def _on_click(self, chosen):
         try:
+            if not getattr(chosen, "result_id", "").startswith("fh_"):
+                return
+                
+            idx_str = chosen.result_id.split("_")[1]
+            idx = int(idx_str)
+            
+            if not hasattr(self.inline, "fheta_cache") or not self.inline.fheta_cache:
+                return
+                
+            query = self.inline.fheta_cache.get("query", "")
+            mods = self.inline.fheta_cache.get("mods",[])
+            
+            if idx >= len(mods):
+                return
+                
+            mod = mods[idx]
+            
+            stats = {"likes": mod.get('likes', 0), "dislikes": mod.get('dislikes', 0)}
+            text = self._fmt_mod(mod, query, idx + 1, len(mods), inline=True)
+            install = mod.get("install", "")
+            
+            buttons = self._mk_btns(install, stats, idx, None, query)
+            
+            inline_msg_id = getattr(chosen, "inline_message_id", None)
+            
+            if inline_msg_id:
+                await self._edit_with_preview(
+                    inline_msg_id,
+                    text=text,
+                    reply_markup=buttons,
+                    banner_url=mod.get("banner")
+                )
+                
+        except Exception:
+            pass
+
+    async def _edit_with_preview(self, call_or_msg_id, text: str, reply_markup: list, banner_url: str = None):
+        try:
+            if banner_url:
+                lo = LinkPreviewOptions(url=banner_url, show_above_text=True, prefer_large_media=True)
+            else:
+                lo = LinkPreviewOptions(is_disabled=True)
+                
+            try:
+                markup = self.inline.generate_markup(reply_markup)
+            except Exception:
+                return
+                
+            bot = getattr(self, "real_bot", getattr(self.inline, "bot", None))
+            if not bot:
+                return
+                
             if isinstance(call_or_msg_id, str):
-                await self.inline.bot.edit_message_text(
+                await bot.edit_message_text(
                     inline_message_id=call_or_msg_id,
                     text=text,
                     reply_markup=markup,
@@ -655,7 +744,7 @@ class FHeta(loader.Module):
             else:
                 inline_msg_id = getattr(call_or_msg_id, "inline_message_id", None)
                 if inline_msg_id:
-                    await self.inline.bot.edit_message_text(
+                    await bot.edit_message_text(
                         inline_message_id=inline_msg_id,
                         text=text,
                         reply_markup=markup,
@@ -663,7 +752,7 @@ class FHeta(loader.Module):
                         parse_mode="HTML"
                     )
                 elif getattr(call_or_msg_id, "message", None):
-                    await self.inline.bot.edit_message_text(
+                    await bot.edit_message_text(
                         chat_id=call_or_msg_id.message.chat.id,
                         message_id=call_or_msg_id.message.message_id,
                         text=text,
@@ -914,11 +1003,6 @@ class FHeta(loader.Module):
     async def fheta(self, query):
         '''(query) - search modules.'''
         actual_query = query.args
-        is_cmd = False
-
-        if actual_query.startswith("__cmd__ "):
-            is_cmd = True
-            actual_query = actual_query[8:]
 
         if not actual_query:
             return {
@@ -946,14 +1030,15 @@ class FHeta(loader.Module):
                 "thumb": "https://raw.githubusercontent.com/Fixyres/FModules/refs/heads/main/assets/FHeta/try_other_query.png",
             }
 
-        results = []
-        
-        for i, mod in enumerate(mods[:50]):
-            stats = {
-                "likes": mod.get('likes', 0),
-                "dislikes": mod.get('dislikes', 0)
-            }
+        if not hasattr(self.inline, "fheta_cache"):
+            self.inline.fheta_cache = {}
             
+        self.inline.fheta_cache.clear()
+        self.inline.fheta_cache["query"] = actual_query
+        self.inline.fheta_cache["mods"] = mods
+
+        results =[]
+        for i, mod in enumerate(mods[:50]):
             desc = mod.get("description", "")
             if isinstance(desc, dict):
                 desc = desc.get(self.strings["lang"]) or desc.get("doc") or next(iter(desc.values()), "")
@@ -961,37 +1046,35 @@ class FHeta(loader.Module):
             desc_str = str(desc)
             inline_desc = desc_str[:250] + "..." if len(desc_str) > 250 else desc_str
             
-            msg_text = self._fmt_mod(mod, actual_query, i + 1 if is_cmd else 1, len(mods) if is_cmd else 1, inline=True)
-            banner = mod.get("banner")
-            
-            if banner:
-                lo = LinkPreviewOptions(url=banner, show_above_text=True, prefer_large_media=True)
-            else:
-                lo = LinkPreviewOptions(is_disabled=True)
-
             pic = mod.get("pic")
             if not pic:
                 pic = "https://raw.githubusercontent.com/Fixyres/FModules/refs/heads/main/assets/FHeta/empty_pic.png"
 
+            install = mod.get("install", "")
+            stats = mod if all(k in mod for k in['likes', 'dislikes']) else {"likes": 0, "dislikes": 0}
+            
+            buttons_dict = self._mk_btns(install, stats, i, None, actual_query)
+            try:
+                markup = self.inline.generate_markup(buttons_dict)
+            except Exception:
+                markup = None
+
             results.append(
                 InlineQueryResultArticle(
-                    id=utils.rand(20),
+                    id=f"fh_{i}",
                     title=utils.escape_html(mod.get("name", "")),
                     description=utils.escape_html(inline_desc),
                     thumbnail_url=pic,
                     input_message_content=InputTextMessageContent(
-                        message_text=msg_text,
-                        parse_mode="HTML",
-                        link_preview_options=lo
+                        message_text="ㅤ",
+                        parse_mode="HTML"
                     ),
-                    reply_markup=self.inline.generate_markup(
-                        self._mk_btns(mod.get("install", ""), stats, i if is_cmd else 0, mods if is_cmd else None, actual_query)
-                    )
+                    reply_markup=markup
                 )
             )
 
         await query.inline_query.answer(results, cache_time=0)
-        return None
+        return
 
     @loader.command(
         ru_doc="(запрос) - поиск модулей.",
@@ -1028,7 +1111,7 @@ class FHeta(loader.Module):
         install = mod.get("install", "")
         buttons = self._mk_btns(install, stats, 0, mods, query)
         
-        form = await self.inline.form("🪐", message, silent=True)
+        form = await self.inline.form("ㅤ", message, reply_markup=buttons, silent=True)
         
         await self._edit_with_preview(
             form,
