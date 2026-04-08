@@ -3,7 +3,7 @@ __version__ = (9, 3, 8)
 # meta developer: @FModules
 # meta pic: https://raw.githubusercontent.com/Fixyres/FModules/refs/heads/main/assets/FHeta/logo.png
 # meta banner: https://raw.githubusercontent.com/Fixyres/FModules/refs/heads/main/assets/FHeta/logo.png
-# scope: hikka_min 1.7.2
+# scope: hikka_min 2.0.0
 
 # ©️ Fixyres, 2024-2030
 # 🌐 https://github.com/Fixyres/FModules
@@ -399,7 +399,7 @@ class FHeta(loader.Module):
         self.uid = (await client.get_me()).id
         self.token = db.get("FHeta", "token")
         self._asession = aiohttp.ClientSession()
-        self.inline.router.chosen_inline_result.register(self._on_click)
+        self.inline._dp.chosen_inline_result.register(self._on_click)
         
         if self.token:
             result = await self._api_get("validatetkn", user_id=str(self.uid))
