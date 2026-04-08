@@ -373,6 +373,7 @@ class FHeta(loader.Module):
     }
     
     def __init__(self):
+        self.fhc = {}
         self.config = loader.ModuleConfig(
             loader.ConfigValue(
                 "only_official_developers",
@@ -398,6 +399,7 @@ class FHeta(loader.Module):
         self.uid = (await client.get_me()).id
         self.token = db.get("FHeta", "token")
         self._asession = aiohttp.ClientSession()
+        self.inline.router.chosen_inline_result.register(self._on_click)
         
         if self.token:
             result = await self._api_get("validatetkn", user_id=str(self.uid))
@@ -635,6 +637,36 @@ class FHeta(loader.Module):
         
         return buttons
 
+    async def _on_click(self, chosen):
+        if not getattr(chosen, "result_id", "").startswith("fheta_"):
+            return
+            
+        cache_key = chosen.result_id.split("_")[1]
+        
+        cached_data = getattr(self, "fhc", {}).get(cache_key)
+        
+        if hasattr(self, "fhc"):
+            self.fhc.clear()
+            
+        if not cached_data:
+            return
+            
+        query, idx, mods = cached_data
+        mod = mods[idx]
+        
+        stats = {"likes": mod.get('likes', 0), "dislikes": mod.get('dislikes', 0)}
+        text = self._fmt_mod(mod, query, 1, 1, inline=True)
+        install = mod.get("install", "")
+        buttons = self._mk_btns(install, stats, 0, None, query)
+        
+        if getattr(chosen, "inline_message_id", None):
+            await self._edit_with_preview(
+                chosen.inline_message_id,
+                text=text,
+                reply_markup=buttons,
+                banner_url=mod.get("banner")
+            )
+            
     async def _edit_with_preview(self, call_or_msg_id, text: str, reply_markup: list, banner_url: str = None):
         if banner_url:
             lo = LinkPreviewOptions(url=banner_url, show_above_text=True, prefer_large_media=True)
@@ -914,11 +946,6 @@ class FHeta(loader.Module):
     async def fheta(self, query):
         '''(query) - search modules.'''
         actual_query = query.args
-        is_cmd = False
-
-        if actual_query.startswith("__cmd__ "):
-            is_cmd = True
-            actual_query = actual_query[8:]
 
         if not actual_query:
             return {
@@ -946,14 +973,13 @@ class FHeta(loader.Module):
                 "thumb": "https://raw.githubusercontent.com/Fixyres/FModules/refs/heads/main/assets/FHeta/try_other_query.png",
             }
 
-        results = []
-        
-        for i, mod in enumerate(mods[:50]):
-            stats = {
-                "likes": mod.get('likes', 0),
-                "dislikes": mod.get('dislikes', 0)
-            }
+        if not hasattr(self, "fhc"):
+            self.fhc = {}
             
+        self.fhc.clear()
+
+        results = []
+        for i, mod in enumerate(mods[:50]):
             desc = mod.get("description", "")
             if isinstance(desc, dict):
                 desc = desc.get(self.strings["lang"]) or desc.get("doc") or next(iter(desc.values()), "")
@@ -961,37 +987,28 @@ class FHeta(loader.Module):
             desc_str = str(desc)
             inline_desc = desc_str[:250] + "..." if len(desc_str) > 250 else desc_str
             
-            msg_text = self._fmt_mod(mod, actual_query, i + 1 if is_cmd else 1, len(mods) if is_cmd else 1, inline=True)
-            banner = mod.get("banner")
-            
-            if banner:
-                lo = LinkPreviewOptions(url=banner, show_above_text=True, prefer_large_media=True)
-            else:
-                lo = LinkPreviewOptions(is_disabled=True)
-
             pic = mod.get("pic")
             if not pic:
                 pic = "https://raw.githubusercontent.com/Fixyres/FModules/refs/heads/main/assets/FHeta/empty_pic.png"
 
+            cache_key = utils.rand(15)
+            self.fhc[cache_key] = (actual_query, i, mods)
+
             results.append(
                 InlineQueryResultArticle(
-                    id=utils.rand(20),
+                    id=f"fheta_{cache_key}",
                     title=utils.escape_html(mod.get("name", "")),
                     description=utils.escape_html(inline_desc),
                     thumbnail_url=pic,
                     input_message_content=InputTextMessageContent(
-                        message_text=msg_text,
-                        parse_mode="HTML",
-                        link_preview_options=lo
-                    ),
-                    reply_markup=self.inline.generate_markup(
-                        self._mk_btns(mod.get("install", ""), stats, i if is_cmd else 0, mods if is_cmd else None, actual_query)
+                        message_text="⌕",
+                        parse_mode="HTML"
                     )
                 )
             )
 
         await query.inline_query.answer(results, cache_time=0)
-        return None
+        return
 
     @loader.command(
         ru_doc="(запрос) - поиск модулей.",
