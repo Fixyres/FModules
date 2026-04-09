@@ -1,4 +1,4 @@
-__version__ = (9, 3, 8)
+__version__ = (9, 3, 9)
 
 # meta developer: @FModules
 # meta pic: https://raw.githubusercontent.com/Fixyres/FModules/refs/heads/main/assets/FHeta/logo.png
@@ -18,15 +18,298 @@ import ast
 import re
 import sys
 import uuid
-from typing import Optional, Dict, List
+import importlib
+from contextlib import suppress
+from typing import Optional, Dict, List, Union, Tuple, Any
 from urllib.parse import unquote
 from importlib.machinery import ModuleSpec
 
 from .. import loader, utils
 from ..types import CoreOverwriteError
 from herokutl.tl.functions.contacts import UnblockRequest
-from herokutl.errors.common import ScamDetectionError
-from aiogram.types import InlineQueryResultArticle, InputTextMessageContent, LinkPreviewOptions
+from aiogram.types import InlineQueryResultArticle, InputTextMessageContent, LinkPreviewOptions, ChosenInlineResult, CallbackQuery, Message
+
+
+class FHetaAPI:
+    def __init__(self) -> None:
+        self.token: Optional[str] = None
+        self.session: Optional[aiohttp.ClientSession] = None
+
+    async def connect(self) -> aiohttp.ClientSession:
+        if self.session is None or self.session.closed:
+            self.session = aiohttp.ClientSession()
+        return self.session
+
+    async def fetch(self, path: str, **params: Any) -> Dict[str, Any]:
+        session = await self.connect()
+        try:
+            async with session.get(
+                f"https://api.fixyres.com/{path}",
+                params=params,
+                headers={"Authorization": self.token},
+                timeout=aiohttp.ClientTimeout(total=10)
+            ) as response:
+                if response.status == 200:
+                    return await response.json()
+                return {}
+        except Exception:
+            return {}
+
+    async def send(self, path: str, payload: Optional[Dict[str, Any]] = None, **params: Any) -> Dict[str, Any]:
+        session = await self.connect()
+        try:
+            async with session.post(
+                f"https://api.fixyres.com/{path}",
+                json=payload,
+                params=params,
+                headers={"Authorization": self.token},
+                timeout=aiohttp.ClientTimeout(total=10)
+            ) as response:
+                if response.status == 200:
+                    return await response.json()
+                return {}
+        except Exception:
+            return {}
+
+
+class MInstaller:
+    async def execute(self, plugin: 'loader.Module', url: str) -> Tuple[str, List[str]]:
+        try:
+            code = await plugin._storage.fetch(url, auth=plugin.config.get("basic_auth"))
+        except Exception:
+            return "error", []
+            
+        for step in range(5):
+            state = await self.load(plugin, code, url, step)
+            
+            if state == "success":
+                if plugin.fully_loaded:
+                    plugin.update_modules_in_db()
+                return "success", []
+                
+            if state == "overwrite":
+                return "overwrite", []
+                
+            if isinstance(state, list):
+                return "dependency", state
+                
+            if state == "error":
+                return "error", []
+                
+            await asyncio.sleep(0.5)
+            
+        return "dependency", []
+
+    async def pip(self, dependencies: List[str]) -> bool:
+        virtualenv = hasattr(sys, 'real_prefix') or sys.prefix != getattr(sys, 'base_prefix', sys.prefix)
+        flags = ["--user"] if loader.USER_INSTALL and not virtualenv else []
+        
+        process = await asyncio.create_subprocess_exec(
+            sys.executable, "-m", "pip", "install", "-U", "-q",
+            "--disable-pip-version-check", "--no-warn-script-location",
+            *flags, *dependencies
+        )
+        
+        return await process.wait() == 0
+
+    async def load(self, plugin: 'loader.Module', code: str, origin: str, step: int) -> Union[str, List[str]]:
+        if step == 0:
+            try:
+                dependencies = list(filter(
+                    lambda requirement: not requirement.startswith(("-", "_", ".")),
+                    map(lambda raw: raw.strip().rstrip(','), loader.VALID_PIP_PACKAGES.search(code)[1].split())
+                ))
+                
+                if dependencies:
+                    if not await self.pip(dependencies):
+                        return dependencies
+                    importlib.invalidate_caches()
+                    return "retry"
+            except Exception:
+                pass
+                
+            try:
+                packages = list(filter(
+                    lambda requirement: not requirement.startswith(("-", "_", ".")),
+                    map(lambda raw: raw.strip().rstrip(','), loader.VALID_APT_PACKAGES.search(code)[1].split())
+                ))
+                
+                if packages:
+                    if not await plugin.install_packages(packages):
+                        return packages
+                    importlib.invalidate_caches()
+                    return "retry"
+            except Exception:
+                pass
+        
+        try:
+            tree = ast.parse(code)
+            identifier = next(
+                node.name for node in tree.body
+                if isinstance(node, ast.ClassDef) and any(
+                    isinstance(base, ast.Attribute) and base.value.id == "Module" or 
+                    isinstance(base, ast.Name) and base.id == "Module" 
+                    for base in node.bases
+                )
+            )
+        except Exception:
+            identifier = "__extmod_" + str(uuid.uuid4())
+        
+        name = f"heroku.modules.{identifier}"
+        instance = None
+        
+        try:
+            spec = ModuleSpec(name, loader.StringLoader(code, f"<external {name}>"), origin=f"<external {name}>")
+            instance = await plugin.allmodules.register_module(spec, name, origin, save_fs=False)
+            
+            plugin.allmodules.send_config_one(instance)
+            await plugin.allmodules.send_ready_one(instance, no_self_unload=True, from_dlmod=False)
+            
+            return "success"
+            
+        except ImportError as exception:
+            alternative = {"sklearn": "scikit-learn", "pil": "Pillow", "herokutl": "Heroku-TL-New"}.get(exception.name.lower(), exception.name)
+            dependencies = [alternative]
+            
+            if not alternative or not await self.pip(dependencies):
+                return dependencies
+                
+            importlib.invalidate_caches()
+            return "retry"
+            
+        except CoreOverwriteError:
+            return "overwrite"
+            
+        except Exception:
+            return "error"
+            
+        finally:
+            if instance and sys.exc_info()[0] is not None:
+                with suppress(Exception):
+                    await plugin.allmodules.unload_module(instance.__class__.__name__)
+                    plugin.allmodules.modules.remove(instance)
+
+
+class FHetaUI:
+    def __init__(self, main: 'FHeta') -> None:
+        self.main = main
+
+    def emoji(self, key: str) -> str:
+        return self.main.THEMES[self.main.config["theme"]][key]
+
+    def format(self, data: Dict[str, Any], query: str = "", index: int = 1, total: int = 1, inline: bool = False) -> str:
+        version = data.get("version", "?.?.?")
+        limit = 3700
+        name = utils.escape_html(data.get("name", ""))
+        author = utils.escape_html(data.get("author", "???"))
+        
+        text = f"{self.emoji('module')} <code>{name}</code> <b>{self.main.strings['author']}</b> <code>{author}</code>"
+        if version != "?.?.?":
+            text += f" (<code>v{version}</code>)"
+
+        description = data.get("description")
+        if description:
+            if isinstance(description, dict):
+                string = description.get(self.main.strings["lang"]) or description.get("doc") or next(iter(description.values()), "")
+            else:
+                string = description
+            text += f"\n\n{self.emoji('description')} <b>{self.main.strings['description']}:</b>\n<blockquote expandable>{utils.escape_html(str(string))}</blockquote>"
+
+        text += self.render(data.get("commands", []), "cmd", limit - len(re.sub(r'<[^>]+>', '', text)))
+        text += self.render(data.get("placeholders", []), "ph", limit - len(re.sub(r'<[^>]+>', '', text)))
+        
+        return text
+
+    def render(self, items: List[Dict[str, Any]], kind: str, limit: int) -> str:
+        if not items:
+            return ""
+            
+        lines = []
+        language = self.main.strings["lang"]
+        
+        title = "commands" if kind == "cmd" else "placeholders"
+        more = "morecommands" if kind == "cmd" else "moreplaceholders"
+        
+        for index, item in enumerate(items):
+            description = item.get("description", {})
+            if isinstance(description, dict):
+                description = description.get(language) or description.get("doc") or ""
+            
+            description = utils.escape_html(description).split('\n')[0] if description else ""
+            name = utils.escape_html(item.get("name", ""))
+            
+            if kind == "cmd":
+                character = '@' + self.main.inline.bot_username + ' ' if item.get('inline') else self.main.get_prefix()
+                row = f"<code>{character}{name}</code> {description}".strip()
+            else:
+                row = f"<code>{{{name}}}</code> {description}".strip()
+            
+            extra = f"<i>{self.main.strings[more].format(remaining=len(items) - index)}</i>"
+            test = "\n".join(lines + [row, extra])
+            
+            if len(re.sub(r'<[^>]+>', '', test)) > limit and index > 0:
+                lines.append(extra)
+                break
+                
+            lines.append(row)
+            
+        return f"\n\n{self.emoji('command' if kind == 'cmd' else 'placeholder')} <b>{self.main.strings[title]}:</b>\n<blockquote expandable>{chr(10).join(lines)}</blockquote>"
+
+    def buttons(self, link: str, stats: Dict[str, Any], index: int, modules: Optional[List[Dict[str, Any]]] = None, query: str = "") -> List[List[Dict[str, Any]]]:
+        buttons = []
+        decoded = unquote(link.replace('%20', '___SPACE___')).replace('___SPACE___', '%20')
+        url = decoded[4:] if decoded.startswith('dlm ') else decoded
+        
+        if query:
+            buttons.append([
+                {"text": self.main.strings["query"], "copy": query},
+                {"text": self.main.strings["install"], "callback": self.main.install, "args": (url, index, modules, query)},
+                {"text": self.main.strings["code"], "url": url}
+            ])
+            
+        buttons.append([
+            {"text": f"↑ {stats.get('likes', 0)}", "callback": self.main.rate, "args": (link, "like", index, modules, query)},
+            {"text": f"↓ {stats.get('dislikes', 0)}", "callback": self.main.rate, "args": (link, "dislike", index, modules, query)}
+        ])
+        
+        if modules and len(modules) > 1:
+            count = {"text": self.main.strings["counter"].format(idx=index+1, total=len(modules)), "callback": self.main.show, "args": (index, modules, query)}
+            buttons[-1].insert(1, count)
+            
+            navigation = []
+            if index > 0:
+                navigation.append({"text": "←", "callback": self.main.navigate, "args": (index - 1, modules, query)})
+            if index < len(modules) - 1:
+                navigation.append({"text": "→", "callback": self.main.navigate, "args": (index + 1, modules, query)})
+                
+            if navigation:
+                buttons.append(navigation)
+                
+        return buttons
+
+    def pagination(self, modules: List[Dict[str, Any]], query: str, page: int = 0, current: int = 0) -> List[List[Dict[str, Any]]]:
+        buttons = []
+        start = page * 8
+        end = min(start + 8, len(modules))
+        
+        for index in range(start, end):
+            name = modules[index].get('name', 'Unknown')
+            author = modules[index].get('author', '???')
+            buttons.append([
+                {"text": f"{index + 1}. {name} by {author}", "callback": self.main.navigate, "args": (index, modules, query)}
+            ])
+            
+        navigation = []
+        if page > 0:
+            navigation.append({"text": "←", "callback": self.main.page, "args": (page - 1, modules, query, current)})
+        if page < (len(modules) + 7) // 8 - 1:
+            navigation.append({"text": "→", "callback": self.main.page, "args": (page + 1, modules, query, current)})
+            
+        if navigation:
+            buttons.append(navigation)
+            
+        buttons.append([{"text": "✘", "callback": self.main.navigate, "args": (current, modules, query)}])
+        return buttons
 
 
 @loader.tds
@@ -35,283 +318,258 @@ class FHeta(loader.Module):
 
     strings = {
         "name": "FHeta",
-        "searching": "{emoji} <b>Searching for <code>{query}</code>...</b>",
-        "no_query": "{emoji} <b>You didn't enter a search query, example: <code>{prefix}fheta your query</code></b>",
-        "no_results": "{emoji} <b>Nothing found for query <code>{query}</code>.</b>",
-        "query_too_big": "{emoji} <b>Your query is too big, please try reducing it to 168 characters.</b>",
-        "module_info": "{emoji} <code>{name}</code> <b>by</b> <code>{author}</code>",
-        "module_info_version": "{emoji} <code>{name}</code> <b>by</b> <code>{author}</code> (<code>v{version}</code>)",
-        "desc": "\n\n{emoji} <b>Description:</b>\n<blockquote expandable>{desc}</blockquote>",
-        "cmds": "\n\n{emoji} <b>Commands:</b>\n<blockquote expandable>{cmds}</blockquote>",
-        "placeholders": "\n\n{emoji} <b>Placeholders:</b>\n<blockquote expandable>{placeholders}</blockquote>",
-        "more_cmds": "<i>...and {remaining} more commands.</i>",
-        "more_phs": "<i>...and {remaining} more placeholders.</i>",
         "lang": "en",
-        "rating_added": "✔ Rating submitted!",
-        "rating_changed": "✔ Rating has been changed!",
-        "rating_removed": "✔ Rating deleted!",
-        "inline_no_query": "Enter a query to search.",
-        "inline_desc": "Name, command, description, author.",
-        "inline_no_results": "Try another query.",
-        "inline_query_too_big": "Your query is too big, please try reducing it to 168 characters.",
-        "query_label": "Query",
-        "install_btn": "Install",
-        "results_count": "{idx}/{total}",
-        "join_channel": "{emoji} This is the channel with all updates in FHeta!",
-        "modules_list": "{emoji} <b>All found modules:</b>",
+        "author": "by",
+        "description": "Description",
+        "commands": "Commands",
+        "placeholders": "Placeholders",
+        "morecommands": "...and {remaining} more commands.",
+        "moreplaceholders": "...and {remaining} more placeholders.",
+        "list": "All found modules:",
+        "search": "Searching for {query}...",
+        "noquery": "You didn't enter a search query, example: {prefix}fheta your query",
+        "notfound": "Nothing found for query {query}.",
+        "toolong": "Your query is too big, please try reducing it to 168 characters.",
+        "added": "✔ Rating submitted!",
+        "changed": "✔ Rating has been changed!",
+        "deleted": "✔ Rating deleted!",
+        "prompt": "Enter a query to search.",
+        "hint": "Name, command, description, author.",
+        "retry": "Try another query.",
+        "query": "Query",
+        "install": "Install",
+        "counter": "{idx}/{total}",
+        "code": "Code",
         "success": "✔ Module successfully installed!",
         "error": "✘ Error, perhaps the module is broken!",
         "overwrite": "✘ Error, module tried to overwrite built-in module!",
-        "requirements": "✘ Dependencies installation error!",
-        "requirements_deps": "✘ Dependencies installation error ({deps})!",
-        "code": "Code",
-        "_cfg_doc_only_official_developers": "Use only modules from official Heroku developers when searching?",
-        "_cfg_doc_theme": "Theme for emojis."
+        "dependency": "✘ Dependencies installation error! {deps}",
+        "docdevs": "Use only modules from official Heroku developers when searching?",
+        "doctheme": "Theme for emojis."
     }
     
     strings_ru = {
         "_cls_doc": "Модуль для поиска модулей! Следите за всеми новостями FHeta в @FHeta_Updates!",
-        "searching": "{emoji} <b>Поиск по запросу <code>{query}</code>...</b>",
-        "no_query": "{emoji} <b>Вы не ввели запрос для поиска, пример: <code>{prefix}fheta ваш запрос</code></b>",
-        "no_results": "{emoji} <b>Ничего не найдено по запросу <code>{query}</code>.</b>",
-        "query_too_big": "{emoji} <b>Ваш запрос слишком большой, пожалуйста, сократите его до 168 символов.</b>",
-        "module_info": "{emoji} <code>{name}</code> <b>от</b> <code>{author}</code>",
-        "module_info_version": "{emoji} <code>{name}</code> <b>от</b> <code>{author}</code> (<code>v{version}</code>)",
-        "desc": "\n\n{emoji} <b>Описание:</b>\n<blockquote expandable>{desc}</blockquote>",
-        "cmds": "\n\n{emoji} <b>Команды:</b>\n<blockquote expandable>{cmds}</blockquote>",
-        "placeholders": "\n\n{emoji} <b>Плейсхолдеры:</b>\n<blockquote expandable>{placeholders}</blockquote>",
-        "more_cmds": "<i>...и еще {remaining} команд.</i>",
-        "more_phs": "<i>...и еще {remaining} плейсхолдеров.</i>",
         "lang": "ru",
-        "rating_added": "✔ Оценка добавлена!",
-        "rating_changed": "✔ Оценка изменена!",
-        "rating_removed": "✔ Оценка удалена!",
-        "inline_no_query": "Введите запрос для поиска.",
-        "inline_desc": "Название, команда, описание, автор.",
-        "inline_no_results": "Попробуйте другой запрос.",
-        "inline_query_too_big": "Ваш запрос слишком большой, пожалуйста, сократите его до 168 символов.",
-        "query_label": "Запрос",
-        "install_btn": "Установить",
-        "join_channel": "{emoji} Это канал со всеми обновлениями FHeta!",
-        "modules_list": "{emoji} <b>Все найденные модули:</b>",
+        "author": "от",
+        "description": "Описание",
+        "commands": "Команды",
+        "placeholders": "Плейсхолдеры",
+        "morecommands": "...и еще {remaining} команд.",
+        "moreplaceholders": "...и еще {remaining} плейсхолдеров.",
+        "list": "Все найденные модули:",
+        "search": "Поиск по запросу {query}...",
+        "noquery": "Вы не ввели запрос для поиска, пример: {prefix}fheta ваш запрос",
+        "notfound": "Ничего не найдено по запросу {query}.",
+        "toolong": "Ваш запрос слишком большой, пожалуйста, сократите его до 168 символов.",
+        "added": "✔ Оценка добавлена!",
+        "changed": "✔ Оценка изменена!",
+        "deleted": "✔ Оценка удалена!",
+        "prompt": "Введите запрос для поиска.",
+        "hint": "Название, команда, описание, автор.",
+        "retry": "Попробуйте другой запрос.",
+        "query": "Запрос",
+        "install": "Установить",
+        "counter": "{idx}/{total}",
+        "code": "Код",
         "success": "✔ Модуль успешно установлен!",
         "error": "✘ Ошибка, возможно, модуль поломан!",
         "overwrite": "✘ Ошибка, модуль пытался перезаписать встроенный модуль!",
-        "requirements": "✘ Ошибка установки зависимостей!",
-        "requirements_deps": "✘ Ошибка установки зависимостей ({deps})!",
-        "code": "Код",
-        "_cfg_doc_only_official_developers": "Использовать только модули от официальных разработчиков Heroku при поиске?",
-        "_cfg_doc_theme": "Тема для эмодзи."
+        "dependency": "✘ Ошибка установки зависимостей! {deps}",
+        "docdevs": "Использовать только модули от официальных разработчиков Heroku при поиске?",
+        "doctheme": "Тема для эмодзи."
     }
     
     strings_ua = {
         "_cls_doc": "Модуль для пошуку модулів! Слідкуйте за всіма новинами FHeta в @FHeta_Updates!",
-        "searching": "{emoji} <b>Пошук за запитом <code>{query}</code>...</b>",
-        "no_query": "{emoji} <b>Ви не ввели запит для пошуку, приклад: <code>{prefix}fheta ваш запит</code></b>",
-        "no_results": "{emoji} <b>Нічого не знайдено за запитом <code>{query}</code>.</b>",
-        "query_too_big": "{emoji} <b>Ваш запит занадто великий, будь ласка, скоротіть його до 168 символів.</b>",
-        "module_info": "{emoji} <code>{name}</code> <b>від</b> <code>{author}</code>",
-        "module_info_version": "{emoji} <code>{name}</code> <b>від</b> <code>{author}</code> (<code>v{version}</code>)",
-        "desc": "\n\n{emoji} <b>Опис:</b>\n<blockquote expandable>{desc}</blockquote>",
-        "cmds": "\n\n{emoji} <b>Команди:</b>\n<blockquote expandable>{cmds}</blockquote>",
-        "placeholders": "\n\n{emoji} <b>Плейсхолдери:</b>\n<blockquote expandable>{placeholders}</blockquote>",
-        "more_cmds": "<i>...і ще {remaining} команд.</i>",
-        "more_phs": "<i>...і ще {remaining} плейсхолдерів.</i>",
         "lang": "ua",
-        "rating_added": "✔ Оцінку додано!",
-        "rating_changed": "✔ Оцінку змінено!",
-        "rating_removed": "✔ Оцінку видалено!",
-        "inline_no_query": "Введіть запит для пошуку.",
-        "inline_desc": "Назва, команда, опис, автор.",
-        "inline_no_results": "Спробуйте інший запит.",
-        "inline_query_too_big": "Ваш запит занадто великий, будь ласка, скоротіть його до 168 символів.",
-        "query_label": "Запит",
-        "install_btn": "Встановити",
-        "join_channel": "{emoji} Це канал з усіма оновленнями FHeta!",
-        "modules_list": "{emoji} <b>Всі знайдені модулі:</b>",
+        "author": "від",
+        "description": "Опис",
+        "commands": "Команды",
+        "placeholders": "Плейсхолдери",
+        "morecommands": "...і ще {remaining} команд.",
+        "moreplaceholders": "...і ще {remaining} плейсхолдерів.",
+        "list": "Всі знайдені модули:",
+        "search": "Пошук за запитом {query}...",
+        "noquery": "Ви не ввели запит для пошуку, приклад: {prefix}fheta ваш запит",
+        "notfound": "Нічого не знайдено за запитом {query}.",
+        "toolong": "Ваш запит занадто великий, будь ласка, скоротіть його до 168 символів.",
+        "added": "✔ Оцінку додано!",
+        "changed": "✔ Оцінку змінено!",
+        "deleted": "✔ Оцінку видалено!",
+        "prompt": "Введіть запит для пошуку.",
+        "hint": "Назва, команда, опис, автор.",
+        "retry": "Спробуйте інший запит.",
+        "query": "Запит",
+        "install": "Встановити",
+        "counter": "{idx}/{total}",
+        "code": "Код",
         "success": "✔ Модуль успішно встановлено!",
         "error": "✘ Помилка, можливо, модуль поламаний!",
         "overwrite": "✘ Помилка, модуль намагався перезаписати вбудований модуль!",
-        "requirements": "✘ Помилка встановлення залежностей!",
-        "requirements_deps": "✘ Помилка встановлення залежностей ({deps})!",
-        "code": "Код",
-        "_cfg_doc_only_official_developers": "Використовувати тільки модулі від офіційних розробників Heroku при пошуку?",
-        "_cfg_doc_theme": "Тема для емодзі."
+        "dependency": "✘ Помилка встановлення залежностей! {deps}",
+        "docdevs": "Використовувати тільки модулі від офіційних розробників Heroku при пошуку?",
+        "doctheme": "Тема для емодзі."
     }
     
     strings_kz = {
         "_cls_doc": "Модульдерді іздеу модулі! FHeta барлық жаңалықтарын @FHeta_Updates арнасында қадағалаңыз!",
-        "searching": "{emoji} <b><code>{query}</code> сұрауы бойынша іздеу...</b>",
-        "no_query": "{emoji} <b>Сіз іздеу сұрауын енгізбедіңіз, мысал: <code>{prefix}fheta сіздің сұрауыңыз</code></b>",
-        "no_results": "{emoji} <b><code>{query}</code> сұрауы бойынша ештеңе табылмады.</b>",
-        "query_too_big": "{emoji} <b>Сіздің сұрауыңыз тым үлкен, оны 168 таңбаға дейін қысқартыңыз.</b>",
-        "module_info": "{emoji} <code>{name}</code> <b>авторы</b> <code>{author}</code>",
-        "module_info_version": "{emoji} <code>{name}</code> <b>авторы</b> <code>{author}</code> (<code>v{version}</code>)",
-        "desc": "\n\n{emoji} <b>Сипаттама:</b>\n<blockquote expandable>{desc}</blockquote>",
-        "cmds": "\n\n{emoji} <b>Командалар:</b>\n<blockquote expandable>{cmds}</blockquote>",
-        "placeholders": "\n\n{emoji} <b>Плейсхолдерлер:</b>\n<blockquote expandable>{placeholders}</blockquote>",
-        "more_cmds": "<i>...және тағы {remaining} команда.</i>",
-        "more_phs": "<i>...және тағы {remaining} плейсхолдер.</i>",
         "lang": "kz",
-        "rating_added": "✔ Бағалау қосылды!",
-        "rating_changed": "✔ Бағалау өзгертілді!",
-        "rating_removed": "✔ Бағалау жойылды!",
-        "inline_no_query": "Іздеу үшін сұрау енгізіңіз.",
-        "inline_desc": "Атауы, команда, сипаттама, автор.",
-        "inline_no_results": "Басқа сұрауды қолданып көріңіз.",
-        "inline_query_too_big": "Сіздің сұрауыңыз тым үлкен, оны 168 таңбаға дейін қысқартыңыз.",
-        "query_label": "Сұрау",
-        "install_btn": "Орнату",
-        "join_channel": "{emoji} Бұл FHeta барлық жаңартулары бар арна!",
-        "modules_list": "{emoji} <b>Барлық табылған модульдер:</b>",
+        "author": "авторы",
+        "description": "Сипаттама",
+        "commands": "Командалар",
+        "placeholders": "Плейсхолдерлер",
+        "morecommands": "...және тағы {remaining} команда.",
+        "moreplaceholders": "...және тағы {remaining} плейсхолдер.",
+        "list": "Барлық табылған модульдер:",
+        "search": "{query} сұрауы бойынша іздеу...",
+        "noquery": "Сіз іздеу сұрауын енгізбедіңіз, мысал: {prefix}fheta сіздің сұрауыңыз",
+        "notfound": "{query} сұрауы бойынша ештеңе табылмады.",
+        "toolong": "Сіздің сұрауыңыз тым үлкен, оны 168 таңбаға дейін қысқартыңыз.",
+        "added": "✔ Бағалау қосылды!",
+        "changed": "✔ Бағалау өзгертілді!",
+        "deleted": "✔ Бағалау жойылды!",
+        "prompt": "Іздеу үшін сұрау енгізіңіз.",
+        "hint": "Атауы, команда, сипаттама, автор.",
+        "retry": "Басқа сұрауды қолданып көріңіз.",
+        "query": "Сұрау",
+        "install": "Орнату",
+        "counter": "{idx}/{total}",
+        "code": "Код",
         "success": "✔ Модуль сәтті орнатылды!",
         "error": "✘ Қате, мүмкін модуль бұзылған!",
         "overwrite": "✘ Қате, модуль кіріктірілген модульді қайта жазуға тырысты!",
-        "requirements": "✘ Тәуелділіктерді орнату қатесі!",
-        "requirements_deps": "✘ Тәуелділіктерді орнату қатесі ({deps})!",
-        "code": "Код",
-        "_cfg_doc_only_official_developers": "Іздеу кезінде тек ресми Heroku әзірлеушілерінің модульдерін пайдалану керек пе?",
-        "_cfg_doc_theme": "Эмодзилер үшін тақырып."
+        "dependency": "✘ Тәуелділіктерді орнату қатесі! {deps}",
+        "docdevs": "Іздеу кезінде тек ресми Heroku әзірлеушілерінің модульдерін пайдалану керек пе?",
+        "doctheme": "Эмодзилер үшін тақырып."
     }
     
     strings_uz = {
         "_cls_doc": "Modullarni qidirish moduli! FHeta barcha yangilanishlarini @FHeta_Updates kanalida kuzatib boring!",
-        "searching": "{emoji} <b><code>{query}</code> so'rovi bo'yicha qidiruv...</b>",
-        "no_query": "{emoji} <b>Siz qidiruv so'rovini kiritmadingiz, misol: <code>{prefix}fheta sizning sorovingiz</code></b>",
-        "no_results": "{emoji} <b><code>{query}</code> so'rovi bo'yicha hech narsa topilmadi.</b>",
-        "query_too_big": "{emoji} <b>Sizning so'rovingiz juda katta, iltimos uni 168 belgigacha qisqartiring.</b>",
-        "module_info": "{emoji} <code>{name}</code> <b>muallif</b> <code>{author}</code>",
-        "module_info_version": "{emoji} <code>{name}</code> <b>muallif</b> <code>{author}</code> (<code>v{version}</code>)",
-        "desc": "\n\n{emoji} <b>Tavsif:</b>\n<blockquote expandable>{desc}</blockquote>",
-        "cmds": "\n\n{emoji} <b>Buyruqlar:</b>\n<blockquote expandable>{cmds}</blockquote>",
-        "placeholders": "\n\n{emoji} <b>Pleysholderlar:</b>\n<blockquote expandable>{placeholders}</blockquote>",
-        "more_cmds": "<i>...va yana {remaining} ta buyruq.</i>",
-        "more_phs": "<i>...va yana {remaining} ta pleysholder.</i>",
         "lang": "uz",
-        "rating_added": "✔ Reyting qo'shildi!",
-        "rating_changed": "✔ Reyting o'zgartirildi!",
-        "rating_removed": "✔ Reyting o'chirildi!",
-        "inline_no_query": "Qidirish uchun so'rov kiriting.",
-        "inline_desc": "Nomi, buyruq, tavsif, muallif.",
-        "inline_no_results": "Boshqa so'rovni sinab ko'ring.",
-        "inline_query_too_big": "Sizning so'rovingiz juda katta, iltimos uni 168 belgigacha qisqartiring.",
-        "query_label": "So'rov",
-        "install_btn": "O'rnatish",
-        "join_channel": "{emoji} Bu FHeta barcha yangilanishlari bo'lgan kanal!",
-        "modules_list": "{emoji} <b>Barcha topilgan modullar:</b>",
+        "author": "muallif",
+        "description": "Tavsif",
+        "commands": "Buyruqlar",
+        "placeholders": "Pleysholderlar",
+        "morecommands": "...va yana {remaining} ta buyruq.",
+        "moreplaceholders": "...va yana {remaining} ta pleysholder.",
+        "list": "Barcha topilgan modullar:",
+        "search": "{query} so'rovi bo'yicha qidiruv...",
+        "noquery": "Siz qidiruv so'rovini kiritmadingiz, misol: {prefix}fheta sizning sorovingiz",
+        "notfound": "{query} so'rovi bo'yicha hech narsa topilmadi.",
+        "toolong": "Sizning so'rovingiz juda katta, iltimos uni 168 belgigacha qisqartiring.",
+        "added": "✔ Reyting qo'shildi!",
+        "changed": "✔ Reyting o'zgartirildi!",
+        "deleted": "✔ Reyting o'chirildi!",
+        "prompt": "Qidirish uchun so'rov kiriting.",
+        "hint": "Nomi, buyruq, tavsif, muallif.",
+        "retry": "Boshqa so'rovni sinab ko'ring.",
+        "query": "So'rov",
+        "install": "O'rnatish",
+        "counter": "{idx}/{total}",
+        "code": "Kod",
         "success": "✔ Modul muvaffaqiyatli o'rnatildi!",
         "error": "✘ Xatolik, ehtimol modul buzilgan!",
         "overwrite": "✘ Xatolik, modul o'rnatilgan modulni qayta yozishga harakat qildi!",
-        "requirements": "✘ Bog'liqliklarni o'rnatish xatosi!",
-        "requirements_deps": "✘ Bog'liqliklarni o'rnatish xatosi ({deps})!",
-        "code": "Kod",
-        "_cfg_doc_only_official_developers": "Qidiruv paytida faqat rasmiy Heroku ishlab chiquvchilarining modullaridan foydalanish kerakmi?",
-        "_cfg_doc_theme": "Emojilar uchun mavzu."
+        "dependency": "✘ Bog'liqliklarni o'rnatish xatosi! {deps}",
+        "docdevs": "Qidiruv paytida faqat rasmiy Heroku ishlab chiquvchilarining modullaridan foydalanish kerakmi?",
+        "doctheme": "Emojilar uchun mavzu."
     }
     
     strings_fr = {
         "_cls_doc": "Module de recherche de modules! Suivez toutes les actualités FHeta sur @FHeta_Updates!",
-        "searching": "{emoji} <b>Recherche pour <code>{query}</code>...</b>",
-        "no_query": "{emoji} <b>Vous n'avez pas entré de requête de recherche, exemple: <code>{prefix}fheta votre requête</code></b>",
-        "no_results": "{emoji} <b>Rien trouvé pour la requête <code>{query}</code>.</b>",
-        "query_too_big": "{emoji} <b>Votre requête est trop longue, veuillez la réduire à 168 caractères.</b>",
-        "module_info": "{emoji} <code>{name}</code> <b>par</b> <code>{author}</code>",
-        "module_info_version": "{emoji} <code>{name}</code> <b>par</b> <code>{author}</code> (<code>v{version}</code>)",
-        "desc": "\n\n{emoji} <b>Description:</b>\n<blockquote expandable>{desc}</blockquote>",
-        "cmds": "\n\n{emoji} <b>Commandes:</b>\n<blockquote expandable>{cmds}</blockquote>",
-        "placeholders": "\n\n{emoji} <b>Espaces réservés:</b>\n<blockquote expandable>{placeholders}</blockquote>",
-        "more_cmds": "<i>...et {remaining} commandes supplémentaires.</i>",
-        "more_phs": "<i>...et {remaining} espaces réservés supplémentaires.</i>",
         "lang": "fr",
-        "rating_added": "✔ Note ajoutée!",
-        "rating_changed": "✔ Note modifiée!",
-        "rating_removed": "✔ Note supprimée!",
-        "inline_no_query": "Entrez une requête pour rechercher.",
-        "inline_desc": "Nom, commande, description, auteur.",
-        "inline_no_results": "Essayez une autre requête.",
-        "inline_query_too_big": "Votre requête est trop longue, veuillez la réduire à 168 caractères.",
-        "query_label": "Requête",
-        "install_btn": "Installer",
-        "join_channel": "{emoji} C'est le canal avec toutes les mises à jour de FHeta!",
-        "modules_list": "{emoji} <b>Tous les modules trouvés:</b>",
+        "author": "par",
+        "description": "Description",
+        "commands": "Commandes",
+        "placeholders": "Espaces réservés",
+        "morecommands": "...et {remaining} commandes supplémentaires.",
+        "moreplaceholders": "...et {remaining} espaces réservés supplémentaires.",
+        "list": "Tous les modules trouvés:",
+        "search": "Recherche pour {query}...",
+        "noquery": "Vous n'avez pas entré de requête de recherche, exemple: {prefix}fheta votre requête",
+        "notfound": "Rien trouvé pour la requête {query}.",
+        "toolong": "Votre requête est trop longue, veuillez la réduire à 168 caractères.",
+        "added": "✔ Note ajoutée!",
+        "changed": "✔ Note modifiée!",
+        "deleted": "✔ Note supprimée!",
+        "prompt": "Entrez une requête pour rechercher.",
+        "hint": "Nom, commande, description, auteur.",
+        "retry": "Essayez une autre requête.",
+        "query": "Requête",
+        "install": "Installer",
+        "counter": "{idx}/{total}",
+        "code": "Code",
         "success": "✔ Module installé avec succès!",
         "error": "✘ Erreur, le module est peut-être cassé!",
         "overwrite": "✘ Erreur, le module a tenté d'écraser le module intégré!",
-        "requirements": "✘ Erreur d'installation des dépendances!",
-        "requirements_deps": "✘ Erreur d'installation des dépendances ({deps})!",
-        "code": "Code",
-        "_cfg_doc_only_official_developers": "Utiliser uniquement les modules des développeurs Heroku officiels lors de la recherche?",
-        "_cfg_doc_theme": "Thème pour les emojis."
+        "dependency": "✘ Erreur d'installation des dépendances! {deps}",
+        "docdevs": "Utiliser uniquement les modules des développeurs Heroku officiels lors de la recherche?",
+        "doctheme": "Thème pour les emojis."
     }
     
     strings_de = {
         "_cls_doc": "Modul zur Suche nach Modulen! Verfolgen Sie alle FHeta-Neuigkeiten auf @FHeta_Updates!",
-        "searching": "{emoji} <b>Suche nach <code>{query}</code>...</b>",
-        "no_query": "{emoji} <b>Sie haben keine Suchanfrage eingegeben, Beispiel: <code>{prefix}fheta ihre anfrage</code></b>",
-        "no_results": "{emoji} <b>Nichts gefunden für Anfrage <code>{query}</code>.</b>",
-        "query_too_big": "{emoji} <b>Ihre Anfrage ist zu groß, bitte reduzieren Sie sie auf 168 Zeichen.</b>",
-        "module_info": "{emoji} <code>{name}</code> <b>von</b> <code>{author}</code>",
-        "module_info_version": "{emoji} <code>{name}</code> <b>von</b> <code>{author}</code> (<code>v{version}</code>)",
-        "desc": "\n\n{emoji} <b>Beschreibung:</b>\n<blockquote expandable>{desc}</blockquote>",
-        "cmds": "\n\n{emoji} <b>Befehle:</b>\n<blockquote expandable>{cmds}</blockquote>",
-        "placeholders": "\n\n{emoji} <b>Platzhalter:</b>\n<blockquote expandable>{placeholders}</blockquote>",
-        "more_cmds": "<i>...und {remaining} weitere Befehle.</i>",
-        "more_phs": "<i>...und {remaining} weitere Platzhalter.</i>",
         "lang": "de",
-        "rating_added": "✔ Bewertung hinzugefügt!",
-        "rating_changed": "✔ Bewertung geändert!",
-        "rating_removed": "✔ Bewertung gelöscht!",
-        "inline_no_query": "Geben Sie eine Suchanfrage ein.",
-        "inline_desc": "Name, Befehl, Beschreibung, Autor.",
-        "inline_no_results": "Versuchen Sie eine andere Anfrage.",
-        "inline_query_too_big": "Ihre Anfrage ist zu groß, bitte reduzieren Sie sie auf 168 Zeichen.",
-        "query_label": "Anfrage",
-        "install_btn": "Installieren",
-        "join_channel": "{emoji} Dies ist der Kanal mit allen FHeta-Updates!",
-        "modules_list": "{emoji} <b>Alle gefundenen Module:</b>",
+        "author": "von",
+        "description": "Beschreibung",
+        "commands": "Befehle",
+        "placeholders": "Platzhalter",
+        "morecommands": "...und {remaining} weitere Befehle.",
+        "moreplaceholders": "...und {remaining} weitere Platzhalter.",
+        "list": "Alle gefundenen Module:",
+        "search": "Suche nach {query}...",
+        "noquery": "Sie haben keine Suchanfrage eingegeben, Beispiel: {prefix}fheta ihre anfrage",
+        "notfound": "Nichts gefunden für Anfrage {query}.",
+        "toolong": "Ihre Anfrage ist zu groß, bitte reduzieren Sie sie auf 168 Zeichen.",
+        "added": "✔ Bewertung hinzugefügt!",
+        "changed": "✔ Bewertung geändert!",
+        "deleted": "✔ Bewertung gelöscht!",
+        "prompt": "Geben Sie eine Suchanfrage ein.",
+        "hint": "Name, Befehl, Beschreibung, Autor.",
+        "retry": "Versuchen Sie eine andere Anfrage.",
+        "query": "Anfrage",
+        "install": "Installieren",
+        "counter": "{idx}/{total}",
+        "code": "Code",
         "success": "✔ Modul erfolgreich installiert!",
         "error": "✘ Fehler, vielleicht ist das Modul kaputt!",
         "overwrite": "✘ Fehler, Modul hat versucht, das integrierte Modul zu überschreiben!",
-        "requirements": "✘ Fehler bei der Installation von Abhängigkeiten!",
-        "requirements_deps": "✘ Fehler bei der Installation von Abhängigkeiten ({deps})!",
-        "code": "Code",
-        "_cfg_doc_only_official_developers": "Nur Module von offiziellen Heroku-Entwicklern bei der Suche verwenden?",
-        "_cfg_doc_theme": "Thema für Emojis."
+        "dependency": "✘ Fehler bei der Installation von Abhängigkeiten! {deps}",
+        "docdevs": "Nur Module von offiziellen Heroku-Entwicklern bei der Suche verwenden?",
+        "doctheme": "Thema für Emojis."
     }
     
     strings_jp = {
         "_cls_doc": "モジュール検索用モジュール！@FHeta_UpdatesでFHetaのすべてのニュースをフォローしてください！",
-        "searching": "{emoji} <b><code>{query}</code>を検索中...</b>",
-        "no_query": "{emoji} <b>検索クエリを入力していません、例: <code>{prefix}fheta あなたのクエリ</code></b>",
-        "no_results": "{emoji} <b>クエリ<code>{query}</code>で何も見つかりませんでした。</b>",
-        "query_too_big": "{emoji} <b>クエリが大きすぎます。168文字に短縮してください。</b>",
-        "module_info": "{emoji} <code>{name}</code> <b>作成者</b> <code>{author}</code>",
-        "module_info_version": "{emoji} <code>{name}</code> <b>作成者</b> <code>{author}</code> (<code>v{version}</code>)",
-        "desc": "\n\n{emoji} <b>説明:</b>\n<blockquote expandable>{desc}</blockquote>",
-        "cmds": "\n\n{emoji} <b>コマンド:</b>\n<blockquote expandable>{cmds}</blockquote>",
-        "placeholders": "\n\n{emoji} <b>プレースホルダー:</b>\n<blockquote expandable>{placeholders}</blockquote>",
-        "more_cmds": "<i>...さらに {remaining} 個のコマンド。</i>",
-        "more_phs": "<i>...さらに {remaining} 個のプレースホルダー。</i>",
         "lang": "jp",
-        "rating_added": "✔ 評価が追加されました！",
-        "rating_changed": "✔ 評価が変更されました！",
-        "rating_removed": "✔ 評価が削除されました！",
-        "inline_no_query": "検索するクエリを入力してください。",
-        "inline_desc": "名前、コマンド、説明、作成者。",
-        "inline_no_results": "別のクエリを試してください。",
-        "inline_query_too_big": "クエリが大きすぎます。168文字に短縮してください。",
-        "query_label": "クエリ",
-        "install_btn": "インストール",
-        "join_channel": "{emoji} これはFHetaのすべての更新があるチャンネルです！",
-        "modules_list": "{emoji} <b>見つかったすべてのモジュール:</b>",
+        "author": "作成者",
+        "description": "説明",
+        "commands": "コマンド",
+        "placeholders": "プレースホルダー",
+        "morecommands": "...さらに {remaining} 個のコマンド。",
+        "moreplaceholders": "...さらに {remaining} 個のプレースホルダー。",
+        "list": "見つかったすべてのモジュール:",
+        "search": "{query}を検索中...",
+        "noquery": "検索クエリを入力していません、例: {prefix}fheta あなたのクエリ",
+        "notfound": "クエリ{query}で何も見つかりませんでした。",
+        "toolong": "クエリが大きすぎます。168文字に短縮してください。",
+        "added": "✔ 評価が追加されました！",
+        "changed": "✔ 評価が変更されました！",
+        "deleted": "✔ 評価が削除されました！",
+        "prompt": "検索するクエリを入力してください。",
+        "hint": "名前、コマンド、説明、作成者。",
+        "retry": "別のクエリを試してください。",
+        "query": "クエリ",
+        "install": "インストール",
+        "counter": "{idx}/{total}",
+        "code": "コード",
         "success": "✔ モジュールが正常にインストールされました!",
         "error": "✘ エラー、モジュールが壊れている可能性があります!",
         "overwrite": "✘ エラー、モジュールが組み込みモジュールを上書きしようとしました!",
-        "requirements": "✘ 依存関係のインストールエラー!",
-        "requirements_deps": "✘ 依存関係のインストールエラー ({deps})!",
-        "code": "コード",
-        "_cfg_doc_only_official_developers": "検索時に公式Heroku開発者のモジュールのみを使用しますか？",
-        "_cfg_doc_theme": "絵文字のテーマ。"
+        "dependency": "✘ 依存関係のインストールエラー! {deps}",
+        "docdevs": "検索時に公式Heroku開発者のモジュールのみを使用しますか？",
+        "doctheme": "絵文字のテーマ。"
     }
     
     THEMES = {
@@ -372,624 +630,227 @@ class FHeta(loader.Module):
         }
     }
     
-    def __init__(self):
-        self.fhc = {}
+    def __init__(self) -> None:
         self.config = loader.ModuleConfig(
             loader.ConfigValue(
                 "only_official_developers",
                 False,
-                lambda: self.strings("_cfg_doc_only_official_developers"),
+                lambda: self.strings("docdevs"),
                 validator=loader.validators.Boolean()
             ),
             loader.ConfigValue(
                 "theme",
                 "default",
-                lambda: self.strings("_cfg_doc_theme"),
+                lambda: self.strings("doctheme"),
                 validator=loader.validators.Choice(["default", "winter", "summer", "spring", "autumn"])
             )
         )
     
-    async def client_ready(self, client, db):
+    async def on_unload(self) -> None:
+        if hasattr(self, "api") and self.api.session and not self.api.session.closed:
+            await self.api.session.close()
+            
+    async def client_ready(self, client: 'telethon.TelegramClient', database: 'loader.Database') -> None:
         try:
             await client(UnblockRequest("@FHeta_robot"))
             await utils.dnd(client, "@FHeta_robot", archive=True)
-        except:
+        except Exception:
             pass
         
-        self.uid = (await client.get_me()).id
-        self.token = db.get("FHeta", "token")
-        self._asession = aiohttp.ClientSession()
+        self.identifier = (await client.get_me()).id
+        self.token = database.get("FHeta", "token")
         
-        real_inline = None
+        self.api = FHetaAPI()
+        self.installer = MInstaller()
+        self.ui = FHetaUI(self)
+        
+        self.api.token = self.token
+        
+        router = None
         try:
             frame = sys._getframe()
             while frame:
-                if 'self' in frame.f_locals:
-                    obj = frame.f_locals['self']
-                    if type(obj).__name__ == "Modules":
-                        real_inline = getattr(obj, "inline", None)
-                        if real_inline:
-                            break
+                if 'self' in frame.f_locals and type(frame.f_locals['self']).__name__ == "Modules":
+                    router = getattr(frame.f_locals['self'], "inline", None)
+                    if router:
+                        break
                 frame = frame.f_back
         except Exception:
             pass
 
-        if not real_inline:
-            real_inline = self.inline
-                
-        dp = getattr(real_inline, "_dp", getattr(real_inline, "dp", getattr(real_inline, "router", None)))
-        self.real_bot = getattr(real_inline, "_bot", getattr(real_inline, "bot", getattr(self.inline, "bot", None)))
+        router = router or self.inline
+        dispatcher = getattr(router, "_dp", getattr(router, "dp", getattr(router, "router", None)))
+        self.bot = getattr(router, "_bot", getattr(router, "bot", getattr(self.inline, "bot", None)))
 
-        if dp:
-            try:
-                async def fheta_middleware(handler, event, data):
-                    if self.lookup("FHeta") is not self:
-                        return await handler(event, data)
-
-                    if getattr(event, "result_id", "").startswith("fh_"):
-                        try:
-                            await self._on_click(event)
-                        except Exception:
-                            pass
-                        return None
+        if dispatcher:
+            async def middleware(handler: Any, event: Any, data: Any) -> Any:
+                if self.lookup("FHeta") is not self:
                     return await handler(event, data)
-                
-                try:
-                    dp.chosen_inline_result.middlewares.clear()
-                except Exception:
-                    pass
-
-                dp.chosen_inline_result.middleware(fheta_middleware)
+                if getattr(event, "result_id", "").startswith("fh_"):
+                    await self.click(event)
+                    return None
+                return await handler(event, data)
+            
+            try:
+                dispatcher.chosen_inline_result.middleware(middleware)
             except Exception:
                 pass
 
-        if self.token:
-            result = await self._api_get("validatetkn", user_id=str(self.uid))
-            if result == False:
-                self.token = None
+        if self.token and not await self.api.fetch("validatetkn", user_id=str(self.identifier)):
+            self.token = None
+            self.api.token = None
         
         if not self.token:
             try:
-                async with client.conversation("@FHeta_robot") as conv:
-                    await conv.send_message('/token')
-                    resp = await conv.get_response(timeout=5)
-                    self.token = resp.text.strip()
-                    db.set("FHeta", "token", self.token)
-            except:
-                pass
-        
-        asyncio.create_task(self._sync_loop())
-        
-    async def _sync_loop(self):
-        ll = None
-        while True:
-            try:
-                cl = self.strings["lang"]
-                if cl != ll:
-                    await self._api_post("dataset", params={"user_id": self.uid, "lang": cl})
-                    ll = cl
+                async with client.conversation("@FHeta_robot") as conversation:
+                    await conversation.send_message('/token')
+                    self.token = (await conversation.get_response(timeout=5)).text.strip()
+                    database.set("FHeta", "token", self.token)
+                    self.api.token = self.token
             except Exception:
                 pass
+        
+        asyncio.create_task(self.sync())
+        
+    async def sync(self) -> None:
+        past = None
+        while True:
+            now = self.strings["lang"]
+            if now != past:
+                await self.api.send("dataset", params={"user_id": self.identifier, "lang": now})
+                past = now
             await asyncio.sleep(1)
 
-    async def _api_get(self, endpoint: str, **params):
+    async def answer(self, callback: Union[CallbackQuery, ChosenInlineResult], text: Optional[str] = None, alert: bool = False) -> None:
         try:
-            async with self._asession.get(
-                f"https://api.fixyres.com/{endpoint}",
-                params=params,
-                headers={"Authorization": self.token},
-                timeout=aiohttp.ClientTimeout(total=180)
-            ) as response:
-                if response.status == 200:
-                    return await response.json()
-                return {}
-        except Exception:
-            return {}
-
-    async def _api_post(self, endpoint: str, json: Dict = None, **params):
-        try:
-            async with self._asession.post(
-                f"https://api.fixyres.com/{endpoint}",
-                json=json,
-                params=params,
-                headers={"Authorization": self.token},
-                timeout=aiohttp.ClientTimeout(total=180)
-            ) as response:
-                if response.status == 200:
-                    return await response.json()
-                return {}
-        except Exception:
-            return {}
-
-    def _get_emoji(self, key: str) -> str:
-        return self.THEMES[self.config["theme"]][key]
-
-    def _fmt_mod(self, mod: Dict, query: str = "", idx: int = 1, total: int = 1, inline: bool = False) -> str:
-        version = mod.get("version", "?.?.?")
-        limit = 3700
-        
-        if version and version != "?.?.?":
-            info = self.strings["module_info_version"].format(
-                emoji=self._get_emoji("module"),
-                name=utils.escape_html(mod.get("name", "")),
-                author=utils.escape_html(mod.get("author", "???")),
-                version=utils.escape_html(version)
-            )
-        else:
-            info = self.strings["module_info"].format(
-                emoji=self._get_emoji("module"),
-                name=utils.escape_html(mod.get("name", "")),
-                author=utils.escape_html(mod.get("author", "???"))
-            )
-
-        desc = mod.get("description")
-        if desc:
-            if isinstance(desc, dict):
-                text = desc.get(self.strings["lang"]) or desc.get("doc") or next(iter(desc.values()), "")
+            if text:
+                await callback.answer(text, show_alert=alert)
             else:
-                text = desc
-            
-            text = str(text)
-            
-            info += self.strings["desc"].format(desc=utils.escape_html(text), emoji=self._get_emoji("description"))
-
-        info_clean_len = len(re.sub(r'<[^>]+>', '', info))
-        cmds_text = self._fmt_cmds(mod.get("commands",[]), limit=limit - info_clean_len)
-        info += cmds_text
-        
-        info_clean_len = len(re.sub(r'<[^>]+>', '', info))
-        phs_text = self._fmt_phs(mod.get("placeholders",[]), limit=limit - info_clean_len)
-        info += phs_text
-
-        return info
-
-    def _fmt_cmds(self, cmds: List[Dict], limit: int) -> str:
-        if not cmds:
-            return ""
-        cmd_lines =[]
-        lang = self.strings["lang"]
-        
-        for i, cmd in enumerate(cmds):
-            desc_dict = cmd.get("description", {})
-            desc_text = desc_dict.get(lang) or desc_dict.get("doc") or ""
-            
-            if isinstance(desc_text, dict):
-                desc_text = desc_text.get("doc", "")
-            
-            cmd_name = utils.escape_html(cmd.get("name", ""))
-            cmd_desc = utils.escape_html(desc_text) if desc_text else ""
-
-            if cmd_desc:
-                cmd_desc = cmd_desc.split('\n')[0]
-
-            if cmd.get("inline"):
-                line = f"<code>@{self.inline.bot_username} {cmd_name}</code> {cmd_desc}"
-            else:
-                line = f"<code>{self.get_prefix()}{cmd_name}</code> {cmd_desc}"
-            
-            current_text = "\n".join(cmd_lines)
-            test_text = current_text + ("\n" if current_text else "") + line
-            
-            more_str = self.strings["more_cmds"].format(remaining=len(cmds) - i)
-            test_text_with_more = test_text + "\n" + more_str
-            
-            if len(re.sub(r'<[^>]+>', '', test_text_with_more)) > limit and i > 0:
-                cmd_lines.append(more_str)
-                break
-            
-            cmd_lines.append(line)
-
-        if cmd_lines:
-            return self.strings["cmds"].format(cmds="\n".join(cmd_lines), emoji=self._get_emoji("command"))
-            
-        return ""
-
-    def _fmt_phs(self, phs: List[Dict], limit: int) -> str:
-        if not phs:
-            return ""
-        ph_lines =[]
-        
-        for i, ph in enumerate(phs):
-            ph_name = utils.escape_html(ph.get("name", ""))
-            ph_desc = utils.escape_html(ph.get("description", ""))
-            
-            if ph_desc:
-                line = f"<code>{{{ph_name}}}</code> {ph_desc}"
-            else:
-                line = f"<code>{{{ph_name}}}</code>"
-            
-            current_text = "\n".join(ph_lines)
-            test_text = current_text + ("\n" if current_text else "") + line
-            
-            more_str = self.strings["more_phs"].format(remaining=len(phs) - i)
-            test_text_with_more = test_text + "\n" + more_str
-            
-            if len(re.sub(r'<[^>]+>', '', test_text_with_more)) > limit and i > 0:
-                ph_lines.append(more_str)
-                break
-            
-            ph_lines.append(line)
-
-        if ph_lines:
-            return self.strings["placeholders"].format(placeholders="\n".join(ph_lines), emoji=self._get_emoji("placeholder"))
-            
-        return ""
-
-    def _mk_btns(self, install: str, stats: Dict, idx: int, mods: Optional[List] = None, query: str = "") -> List[List[Dict]]:
-        buttons =[]
-        
-        decoded_install = unquote(install.replace('%20', '___SPACE___')).replace('___SPACE___', '%20')
-        install_url = decoded_install[4:] if decoded_install.startswith('dlm ') else decoded_install
-        
-        if query:
-            buttons.append([
-                {"text": self.strings["query_label"], "copy": query},
-                {"text": self.strings["install_btn"], "callback": self._install_cb, "args": (install_url, idx, mods, query)},
-                {"text": self.strings["code"], "url": install_url}
-            ])
-        
-        buttons.append([
-            {"text": f"↑ {stats.get('likes', 0)}", "callback": self._rate_cb, "args": (install, "like", idx, mods, query)},
-            {"text": f"↓ {stats.get('dislikes', 0)}", "callback": self._rate_cb, "args": (install, "dislike", idx, mods, query)}
-        ])
-        
-        if mods and len(mods) > 1:
-            buttons[-1].insert(1, {"text": self.strings["results_count"].format(idx=idx+1, total=len(mods)), "callback": self._show_list_cb, "args": (idx, mods, query)})
-
-        if mods and len(mods) > 1:
-            nav_buttons =[]
-            if idx > 0:
-                nav_buttons.append({"text": "←", "callback": self._nav_cb, "args": (idx - 1, mods, query)})
-            if idx < len(mods) - 1:
-                nav_buttons.append({"text": "→", "callback": self._nav_cb, "args": (idx + 1, mods, query)})
-            if nav_buttons:
-                buttons.append(nav_buttons)
-
-        return buttons
-
-    def _mk_list_btns(self, mods: List, query: str, page: int = 0, current_idx: int = 0) -> List[List[Dict]]:
-        buttons =[]
-        items_per_page = 8
-        total_pages = (len(mods) + items_per_page - 1) // items_per_page
-        
-        start_idx = page * items_per_page
-        end_idx = min(start_idx + items_per_page, len(mods))
-        
-        for i in range(start_idx, end_idx):
-            mod = mods[i]
-            name = mod.get("name", "Unknown")
-            author = mod.get("author", "???")
-            button_text = f"{i + 1}. {name} by {author}"
-            buttons.append([
-                {"text": button_text, "callback": self._select_from_list_cb, "args": (i, mods, query)}
-            ])
-        
-        nav_buttons =[]
-        if page > 0:
-            nav_buttons.append({"text": "←", "callback": self._list_page_cb, "args": (page - 1, mods, query, current_idx)})
-        if page < total_pages - 1:
-            nav_buttons.append({"text": "→", "callback": self._list_page_cb, "args": (page + 1, mods, query, current_idx)})
-        
-        if nav_buttons:
-            buttons.append(nav_buttons)
-        
-        buttons.append([
-            {"text": "✘", "callback": self._close_list_cb, "args": (current_idx, mods, query)}
-        ])
-        
-        return buttons
-
-    async def _on_click(self, chosen):
-        try:
-            if not getattr(chosen, "result_id", "").startswith("fh_"):
-                return
-                
-            idx_str = chosen.result_id.split("_")[1]
-            idx = int(idx_str)
-            
-            if not hasattr(self.inline, "fheta_cache") or not self.inline.fheta_cache:
-                return
-                
-            query = self.inline.fheta_cache.get("query", "")
-            mods = self.inline.fheta_cache.get("mods",[])
-            
-            if idx >= len(mods):
-                return
-                
-            mod = mods[idx]
-            
-            stats = {"likes": mod.get('likes', 0), "dislikes": mod.get('dislikes', 0)}
-            text = self._fmt_mod(mod, query, idx + 1, len(mods), inline=True)
-            install = mod.get("install", "")
-            
-            buttons = self._mk_btns(install, stats, idx, None, query)
-            
-            inline_msg_id = getattr(chosen, "inline_message_id", None)
-            
-            if inline_msg_id:
-                await self._edit_with_preview(
-                    inline_msg_id,
-                    text=text,
-                    reply_markup=buttons,
-                    banner_url=mod.get("banner")
-                )
-                
+                await callback.answer()
         except Exception:
             pass
 
-    async def _edit_with_preview(self, call_or_msg_id, text: str, reply_markup: list, banner_url: str = None):
+    async def edit(self, target: Union[str, ChosenInlineResult, CallbackQuery, Message, 'telethon.types.Message'], text: str, buttons: List[List[Dict[str, Any]]], banner: Optional[str] = None) -> None:
         try:
-            if banner_url:
-                lo = LinkPreviewOptions(url=banner_url, show_above_text=True, prefer_large_media=True)
-            else:
-                lo = LinkPreviewOptions(is_disabled=True)
-                
-            try:
-                markup = self.inline.generate_markup(reply_markup)
-            except Exception:
-                return
-                
-            bot = getattr(self, "real_bot", getattr(self.inline, "bot", None))
-            if not bot:
-                return
-                
-            if isinstance(call_or_msg_id, str):
-                await bot.edit_message_text(
-                    inline_message_id=call_or_msg_id,
-                    text=text,
-                    reply_markup=markup,
-                    link_preview_options=lo,
-                    parse_mode="HTML"
-                )
-            else:
-                inline_msg_id = getattr(call_or_msg_id, "inline_message_id", None)
-                if inline_msg_id:
-                    await bot.edit_message_text(
-                        inline_message_id=inline_msg_id,
-                        text=text,
-                        reply_markup=markup,
-                        link_preview_options=lo,
-                        parse_mode="HTML"
-                    )
-                elif getattr(call_or_msg_id, "message", None):
-                    await bot.edit_message_text(
-                        chat_id=call_or_msg_id.message.chat.id,
-                        message_id=call_or_msg_id.message.message_id,
-                        text=text,
-                        reply_markup=markup,
-                        link_preview_options=lo,
-                        parse_mode="HTML"
-                    )
-        except Exception:
-            pass
-
-    async def _show_list_cb(self, call, idx: int, mods: List, query: str):
-        try:
-            await call.answer()
-        except:
-            pass
-        
-        await self._edit_with_preview(
-            call,
-            text=self.strings["modules_list"].format(emoji=self._get_emoji("modules_list")),
-            reply_markup=self._mk_list_btns(mods, query, 0, idx),
-            banner_url=None
-        )
-
-    async def _list_page_cb(self, call, page: int, mods: List, query: str, current_idx: int):
-        try:
-            await call.answer()
-        except:
-            pass
+            options = LinkPreviewOptions(url=banner, show_above_text=True, prefer_large_media=True) if banner else LinkPreviewOptions(is_disabled=True)
+            markup = self.inline.generate_markup(buttons)
             
-        await self._edit_with_preview(
-            call,
-            text=self.strings["modules_list"].format(emoji=self._get_emoji("modules_list")),
-            reply_markup=self._mk_list_btns(mods, query, page, current_idx),
-            banner_url=None
-        )
+            if not self.bot:
+                return
 
-    async def _select_from_list_cb(self, call, idx: int, mods: List, query: str):
-        try:
-            await call.answer()
-        except:
-            pass
-        
-        if not (0 <= idx < len(mods)):
-            return
-        
-        mod = mods[idx]
-        install = mod.get('install', '')
-        stats = mod if all(k in mod for k in['likes', 'dislikes']) else {"likes": 0, "dislikes": 0}
-        
-        await self._edit_with_preview(
-            call,
-            text=self._fmt_mod(mod, query, idx + 1, len(mods)),
-            reply_markup=self._mk_btns(install, stats, idx, mods, query),
-            banner_url=mod.get("banner")
-        )
+            arguments = {
+                "text": text,
+                "reply_markup": markup,
+                "link_preview_options": options,
+                "parse_mode": "HTML"
+            }
 
-    async def _close_list_cb(self, call, idx: int, mods: List, query: str):
-        try:
-            await call.answer()
-        except:
-            pass
-        
-        if not (0 <= idx < len(mods)):
-            return
-        
-        mod = mods[idx]
-        install = mod.get('install', '')
-        stats = mod if all(k in mod for k in['likes', 'dislikes']) else {"likes": 0, "dislikes": 0}
-        
-        await self._edit_with_preview(
-            call,
-            text=self._fmt_mod(mod, query, idx + 1, len(mods)),
-            reply_markup=self._mk_btns(install, stats, idx, mods, query),
-            banner_url=mod.get("banner")
-        )
-
-    async def _rate_cb(self, call, install: str, action: str, idx: int, mods: Optional[List], query: str = ""):
-        result = await self._api_post(f"rate/{self.uid}/{install}/{action}")
-        
-        decoded_install = unquote(install)
-        
-        if mods and idx < len(mods):
-            mod = mods[idx]
-            stats_response = await self._api_post("get", json=[decoded_install])
-            stats = stats_response.get(decoded_install, {"likes": 0, "dislikes": 0})
+            inline = target if isinstance(target, str) else getattr(target, "inline_message_id", None)
             
-            mod["likes"] = stats.get("likes", 0)
-            mod["dislikes"] = stats.get("dislikes", 0)
-        else:
-            stats_response = await self._api_post("get", json=[decoded_install])
-            stats = stats_response.get(decoded_install, {"likes": 0, "dislikes": 0})
-        
-        try:
-            await call.edit(reply_markup=self._mk_btns(install, stats, idx, mods, query))
-        except:
-            pass
-
-        if result and result.get("status"):
-            result_status = result.get("status", "")
-            try:
-                if result_status == "added":
-                    await call.answer(self.strings["rating_added"], show_alert=True)
-                elif result_status == "changed":
-                    await call.answer(self.strings["rating_changed"], show_alert=True)
-                elif result_status == "removed":
-                    await call.answer(self.strings["rating_removed"], show_alert=True)
-            except:
-                pass
-
-    async def _install_cb(self, call, install_url: str, idx: int, mods: Optional[List], query: str = ""):
-        lm = self.lookup("loader")
-        
-        try:
-            r = await lm._storage.fetch(install_url, auth=lm.config.get("basic_auth"))
-        except (aiohttp.ClientError, aiohttp.ClientResponseError) as e:
-            try:
-                await call.answer(
-                    self.strings["error"],
-                    show_alert=True
-                )
-            except:
-                pass
-            return
-        
-        doc = r
-        origin = install_url
-        
-        max_attempts = 5
-        for attempt in range(max_attempts):
-            try:
-                result = await self._load_module(lm, doc, origin, attempt)
+            if inline:
+                arguments["inline_message_id"] = inline
+            else:
+                message = getattr(target, "message", target)
+                chat = getattr(getattr(message, "chat", message), "id", getattr(message, "chat_id", None))
+                identifier = getattr(message, "message_id", getattr(message, "id", None))
                 
-                if result == "success":
-                    if lm.fully_loaded:
-                        lm.update_modules_in_db()
-                    
-                    try:
-                        await call.answer(
-                            self.strings["success"],
-                            show_alert=True
-                        )
-                    except:
-                        pass
-                    return
-                
-                elif result == "retry":
-                    if attempt < max_attempts - 1:
-                        await asyncio.sleep(0.33)
-                        continue
-                    else:
-                        try:
-                            await call.answer(
-                                self.strings["requirements"],
-                                show_alert=True
-                            )
-                        except Exception:
-                            pass
-                        return
-                
-                elif isinstance(result, dict) and result.get("type") == "requirements_error":
-                    deps = result.get("deps",[])
-                    if deps:
-                        deps_text = ", ".join(deps[:5])
-                        try:
-                            await call.answer(
-                                self.strings["requirements_deps"].format(deps=deps_text),
-                                show_alert=True
-                            )
-                        except:
-                            pass
-                    else:
-                        try:
-                            await call.answer(
-                                self.strings["requirements"],
-                                show_alert=True
-                            )
-                        except:
-                            pass
-                    return
-                
-                elif result == "overwrite":
-                    try:
-                        await call.answer(
-                            self.strings["overwrite"],
-                            show_alert=True
-                        )
-                    except:
-                        pass
-                    return
-                
+                if chat and identifier:
+                    arguments["chat_id"] = chat
+                    arguments["message_id"] = identifier
                 else:
-                    try:
-                        await call.answer(
-                            self.strings["error"],
-                            show_alert=True
-                        )
-                    except:
-                        pass
                     return
-                    
-            except:
-                try:
-                    await call.answer(
-                        self.strings["error"],
-                        show_alert=True
-                    )
-                except:
-                    pass
-                return
-        
-        try:
-            await call.answer(
-                self.strings["requirements"],
-                show_alert=True
-            )
-        except:
+
+            await self.bot.edit_message_text(**arguments)
+        except Exception:
             pass
 
-    async def _nav_cb(self, call, idx: int, mods: List, query: str = ""):
+    async def click(self, callback: ChosenInlineResult) -> None:
         try:
-            await call.answer()
-        except:
+            if not getattr(callback, "result_id", "").startswith("fh_"):
+                return
+                
+            parts = callback.result_id.split("_")
+            if len(parts) != 3:
+                return
+                
+            queryid = parts[1]
+            index = int(parts[2])
+            
+            cache = getattr(self.inline, "fheta_cache", {})
+            saved = cache.get(queryid, {})
+            query = saved.get("query", "")
+            modules = saved.get("mods", [])
+            
+            if not modules or index >= len(modules):
+                return
+                
+            data = modules[index]
+            text = self.ui.format(data, query, index+1, len(modules), True)
+            buttons = self.ui.buttons(data.get("install", ""), data, index, None, query)
+            
+            await self.edit(callback, text, buttons, data.get("banner"))
+        except Exception:
+            pass
+
+    async def show(self, callback: Union[CallbackQuery, ChosenInlineResult], index: int, modules: List[Dict[str, Any]], query: str) -> None:
+        await self.answer(callback)
+        text = f"{self.ui.emoji('modules_list')} <b>{self.strings['list']}</b>"
+        await self.edit(callback, text, self.ui.pagination(modules, query, 0, index))
+
+    async def page(self, callback: Union[CallbackQuery, ChosenInlineResult], current: int, modules: List[Dict[str, Any]], query: str, index: int) -> None:
+        await self.answer(callback)
+        text = f"{self.ui.emoji('modules_list')} <b>{self.strings['list']}</b>"
+        await self.edit(callback, text, self.ui.pagination(modules, query, current, index))
+
+    async def navigate(self, callback: Union[CallbackQuery, ChosenInlineResult], index: int, modules: List[Dict[str, Any]], query: str = "") -> None:
+        await self.answer(callback)
+        if 0 <= index < len(modules):
+            data = modules[index]
+            text = self.ui.format(data, query, index + 1, len(modules))
+            buttons = self.ui.buttons(data.get('install', ''), data, index, modules, query)
+            await self.edit(callback, text, buttons, data.get("banner"))
+
+    async def rate(self, callback: Union[CallbackQuery, ChosenInlineResult, Message, 'telethon.types.Message'], link: str, action: str, index: int, modules: Optional[List[Dict[str, Any]]], query: str = "") -> None:
+        response = await self.api.send(f"rate/{self.identifier}/{link}/{action}")
+        
+        request = await self.api.send("get", payload=[unquote(link)])
+        stats = request.get(unquote(link), {"likes": 0, "dislikes": 0})
+        
+        if modules and index < len(modules):
+            modules[index].update(stats)
+            
+        try:
+            await callback.edit(reply_markup=self.ui.buttons(link, stats, index, modules, query))
+        except Exception:
             pass
             
-        if not (0 <= idx < len(mods)):
-            return
+        if response and response.get("status"):
+            status = response.get("status")
+            if status == "added":
+                text = self.strings["added"]
+            elif status == "changed":
+                text = self.strings["changed"]
+            elif status == "removed":
+                text = self.strings["deleted"]
+            else:
+                text = ""
+            await self.answer(callback, text, True)
+
+    async def install(self, callback: Union[CallbackQuery, ChosenInlineResult], link: str, index: int, modules: Optional[List[Dict[str, Any]]], query: str = "") -> None:
+        state, dependencies = await self.installer.execute(self.lookup("loader"), link)
         
-        mod = mods[idx]
-        install = mod.get('install', '')
-        stats = mod if all(k in mod for k in['likes', 'dislikes']) else {"likes": 0, "dislikes": 0}
-        
-        await self._edit_with_preview(
-            call,
-            text=self._fmt_mod(mod, query, idx + 1, len(mods)),
-            reply_markup=self._mk_btns(install, stats, idx, mods, query),
-            banner_url=mod.get("banner")
-        )
+        try:
+            if state == "success":
+                await self.answer(callback, self.strings["success"], True)
+            elif state == "dependency":
+                formatted = f"({','.join(dependencies[:5])})" if dependencies else ""
+                await self.answer(callback, self.strings["dependency"].format(deps=formatted), True)
+            elif state == "overwrite":
+                await self.answer(callback, self.strings["overwrite"], True)
+            else:
+                await self.answer(callback, self.strings["error"], True)
+        except Exception:
+            pass
 
     @loader.inline_handler(
         ru_doc="(запрос) - поиск модулей.",
@@ -1000,81 +861,68 @@ class FHeta(loader.Module):
         de_doc="(anfrage) - module suchen.",
         jp_doc="(クエリ) - モジュールを検索します。"
     )
-    async def fheta(self, query):
+    async def fheta(self, event: 'loader.InlineCall') -> Union[Dict[str, str], None]:
         '''(query) - search modules.'''
-        actual_query = query.args
-
-        if not actual_query:
-            return {
-                "title": self.strings["inline_no_query"],
-                "description": self.strings["inline_desc"],
-                "message": self.strings["inline_no_query"].format(emoji=self._get_emoji("error")),
-                "thumb": "https://raw.githubusercontent.com/Fixyres/FModules/refs/heads/main/assets/FHeta/magnifying_glass.png",
-            }
-
-        if len(actual_query) > 168:
-            return {
-                "title": self.strings["inline_query_too_big"],
-                "description": self.strings["inline_no_results"],
-                "message": self.strings["query_too_big"].format(emoji=self._get_emoji("warn")),
-                "thumb": "https://raw.githubusercontent.com/Fixyres/FModules/refs/heads/main/assets/FHeta/try_other_query.png",
-            }
-
-        mods = await self._api_get("search", query=actual_query, inline="true", token=self.token, user_id=self.uid, ood=str(self.config["only_official_developers"]).lower())
+        query = event.args
         
-        if not mods or not isinstance(mods, list):
+        if not query:
             return {
-                "title": self.strings["inline_no_results"],
-                "description": self.strings["inline_desc"],
-                "message": self.strings["inline_no_results"],
-                "thumb": "https://raw.githubusercontent.com/Fixyres/FModules/refs/heads/main/assets/FHeta/try_other_query.png",
+                "title": self.strings["prompt"],
+                "description": self.strings["hint"],
+                "message": f"{self.ui.emoji('error')} <b>{self.strings['prompt']}</b>",
+                "thumb": "https://raw.githubusercontent.com/Fixyres/FModules/refs/heads/main/assets/FHeta/magnifying_glass.png"
+            }
+            
+        if len(query) > 168:
+            return {
+                "title": self.strings["toolong"],
+                "description": self.strings["retry"],
+                "message": f"{self.ui.emoji('warn')} <b>{self.strings['toolong']}</b>",
+                "thumb": "https://raw.githubusercontent.com/Fixyres/FModules/refs/heads/main/assets/FHeta/try_other_query.png"
+            }
+        
+        modules = await self.api.fetch("search", query=query, inline="true", token=self.token, user_id=self.identifier, ood=str(self.config["only_official_developers"]).lower())
+        
+        if not modules or not isinstance(modules, list):
+            return {
+                "title": self.strings["retry"],
+                "description": self.strings["hint"],
+                "message": f"{self.ui.emoji('error')} <b>{self.strings['notfound'].format(query=utils.escape_html(query))}</b>",
+                "thumb": "https://raw.githubusercontent.com/Fixyres/FModules/refs/heads/main/assets/FHeta/try_other_query.png"
             }
 
+        queryid = str(uuid.uuid4())[:8]
         if not hasattr(self.inline, "fheta_cache"):
             self.inline.fheta_cache = {}
             
-        self.inline.fheta_cache.clear()
-        self.inline.fheta_cache["query"] = actual_query
-        self.inline.fheta_cache["mods"] = mods
-
-        results =[]
-        for i, mod in enumerate(mods[:50]):
-            desc = mod.get("description", "")
-            if isinstance(desc, dict):
-                desc = desc.get(self.strings["lang"]) or desc.get("doc") or next(iter(desc.values()), "")
+        if len(self.inline.fheta_cache) >= 50:
+            self.inline.fheta_cache.pop(next(iter(self.inline.fheta_cache)))
             
-            desc_str = str(desc)
-            inline_desc = desc_str[:250] + "..." if len(desc_str) > 250 else desc_str
+        self.inline.fheta_cache[queryid] = {"query": query, "mods": modules}
+        
+        results = []
+        
+        for index, data in enumerate(modules[:50]):
+            description = data.get("description", "")
+            if isinstance(description, dict):
+                description = description.get(self.strings["lang"]) or description.get("doc") or next(iter(description.values()), "")
             
-            pic = mod.get("pic")
-            if not pic:
-                pic = "https://raw.githubusercontent.com/Fixyres/FModules/refs/heads/main/assets/FHeta/empty_pic.png"
-
-            install = mod.get("install", "")
-            stats = mod if all(k in mod for k in['likes', 'dislikes']) else {"likes": 0, "dislikes": 0}
-            
-            buttons_dict = self._mk_btns(install, stats, i, None, actual_query)
+            markup = None
             try:
-                markup = self.inline.generate_markup(buttons_dict)
+                markup = self.inline.generate_markup(self.ui.buttons(data.get("install", ""), data, index, None, query))
             except Exception:
-                markup = None
-
-            results.append(
-                InlineQueryResultArticle(
-                    id=f"fh_{i}",
-                    title=utils.escape_html(mod.get("name", "")),
-                    description=utils.escape_html(inline_desc),
-                    thumbnail_url=pic,
-                    input_message_content=InputTextMessageContent(
-                        message_text="ㅤ",
-                        parse_mode="HTML"
-                    ),
-                    reply_markup=markup
-                )
-            )
-
-        await query.inline_query.answer(results, cache_time=0)
-        return
+                pass
+                
+            results.append(InlineQueryResultArticle(
+                id=f"fh_{queryid}_{index}",
+                title=utils.escape_html(data.get("name", "")),
+                description=utils.escape_html(str(description)[:250] + ("..." if len(str(description)) > 250 else "")),
+                thumbnail_url=data.get("pic") or "https://raw.githubusercontent.com/Fixyres/FModules/refs/heads/main/assets/FHeta/empty_pic.png",
+                input_message_content=InputTextMessageContent(message_text="ㅤ", parse_mode="HTML"),
+                reply_markup=markup
+            ))
+            
+        await event.inline_query.answer(results, cache_time=0)
 
     @loader.command(
         ru_doc="(запрос) - поиск модулей.",
@@ -1085,303 +933,51 @@ class FHeta(loader.Module):
         de_doc="(anfrage) - module suchen.",
         jp_doc="(クエリ) - モジュールを検索します。"
     )
-    async def fhetacmd(self, message):
+    async def fhetacmd(self, message: 'telethon.types.Message') -> Any:
         '''(query) - search modules.'''
         query = utils.get_args_raw(message)
         
         if not query:
-            await utils.answer(message, self.strings["no_query"].format(emoji=self._get_emoji("error"), prefix=self.get_prefix()))
-            return
-
+            return await utils.answer(message, f"{self.ui.emoji('error')} <b>{self.strings['noquery'].format(prefix=self.get_prefix())}</b>")
+            
         if len(query) > 168:
-            await utils.answer(message, self.strings["query_too_big"].format(emoji=self._get_emoji("warn")))
-            return
+            return await utils.answer(message, f"{self.ui.emoji('warn')} <b>{self.strings['toolong']}</b>")
 
-        message = await utils.answer(message, self.strings["searching"].format(emoji=self._get_emoji("search"), query=utils.escape_html(query)))
+        message = await utils.answer(message, f"{self.ui.emoji('search')} <b>{self.strings['search'].format(query=utils.escape_html(query))}</b>")
         
-        mods = await self._api_get("search", query=query, inline="false", token=self.token, user_id=self.uid, ood=str(self.config["only_official_developers"]).lower())
+        modules = await self.api.fetch("search", query=query, inline="false", token=self.token, user_id=self.identifier, ood=str(self.config["only_official_developers"]).lower())
         
-        if not mods or not isinstance(mods, list):
-            await utils.answer(message, self.strings["no_results"].format(emoji=self._get_emoji("error"), query=utils.escape_html(query)))
-            return
+        if not modules or not isinstance(modules, list):
+            return await utils.answer(message, f"{self.ui.emoji('error')} <b>{self.strings['notfound'].format(query=utils.escape_html(query))}</b>")
 
-        mod = mods[0]
-        text = self._fmt_mod(mod, query, 1, len(mods))
-        stats = {"likes": mod.get("likes", 0), "dislikes": mod.get("dislikes", 0)}
-        install = mod.get("install", "")
-        buttons = self._mk_btns(install, stats, 0, mods, query)
-        
+        data = modules[0]
+        buttons = self.ui.buttons(data.get("install", ""), data, 0, modules, query)
         form = await self.inline.form("ㅤ", message, reply_markup=buttons, silent=True)
+        text = self.ui.format(data, query, 1, len(modules))
         
-        await self._edit_with_preview(
-            form,
-            text=text,
-            reply_markup=buttons,
-            banner_url=mod.get("banner"),
-        )
-        
-    @loader.watcher(chat_id=7575472403)
-    async def _install_via_fheta(self, message):
-        link = message.raw_text.strip()
-        
-        if not link.startswith("https://api.fixyres.com/module/"):
-            return
-        
-        try:
-            lm = self.lookup("loader")
-            
-            try:
-                r = await lm._storage.fetch(link, auth=lm.config.get("basic_auth"))
-            except (aiohttp.ClientError, aiohttp.ClientResponseError):
-                status_msg = await message.respond("❌")
-                await asyncio.sleep(0.67)
-                await status_msg.delete()
-                await message.delete()
-                return
-            
-            doc = r
-            origin = link
-            
-            max_attempts = 5
-            for attempt in range(max_attempts):
-                try:
-                    result = await self._load_module(
-                        lm,
-                        doc,
-                        origin,
-                        attempt
-                    )
-                    
-                    if result == "success":
-                        if lm.fully_loaded:
-                            lm.update_modules_in_db()
-                        
-                        status_msg = await message.respond("✅")
-                        await asyncio.sleep(0.5)
-                        await status_msg.delete()
-                        await message.delete()
-                        return
-                    
-                    elif result == "retry":
-                        if attempt < max_attempts - 1:
-                            await asyncio.sleep(0.33)
-                            continue
-                        else:
-                            status_msg = await message.respond("📋")
-                            await asyncio.sleep(1)
-                            await status_msg.delete()
-                            await message.delete()
-                            return
-                    
-                    elif isinstance(result, dict) and result.get("type") == "requirements_error":
-                        deps = result.get("deps",[])
-                        if deps:
-                            deps_text = ",".join(deps[:5])
-                            status_msg = await message.respond(f"📋{deps_text}")
-                        else:
-                            status_msg = await message.respond("📋")
-                        await asyncio.sleep(1)
-                        await status_msg.delete()
-                        await message.delete()
-                        return
-                    
-                    elif result == "overwrite":
-                        status_msg = await message.respond("😨")
-                        await asyncio.sleep(1)
-                        await status_msg.delete()
-                        await message.delete()
-                        return
-                    
-                    else:
-                        status_msg = await message.respond("❌")
-                        await asyncio.sleep(0.67)
-                        await status_msg.delete()
-                        await message.delete()
-                        return
-                        
-                except Exception:
-                    status_msg = await message.respond("❌")
-                    await asyncio.sleep(0.67)
-                    await status_msg.delete()
-                    await message.delete()
-                    return
-            
-            status_msg = await message.respond("📋")
-            await asyncio.sleep(1)
-            await status_msg.delete()
-            await message.delete()
-            
-        except Exception:
-            status_msg = await message.respond("❌")
-            await asyncio.sleep(0.67)
-            await status_msg.delete()
-            await message.delete()
+        await self.edit(form, text, buttons, data.get("banner"))
 
-    async def _load_module(self, lm, doc, origin, attempt):
-        if attempt == 0:
-            requirements = []
-            try:
-                requirements = list(
-                    filter(
-                        lambda x: not x.startswith(("-", "_", ".")),
-                        map(
-                            lambda s: s.strip().rstrip(','),
-                            loader.VALID_PIP_PACKAGES.search(doc)[1].split(),
-                        ),
-                    )
-                )
-            except (TypeError, AttributeError):
-                pass
-            
-            if requirements:
-                is_venv = hasattr(sys, 'real_prefix') or sys.prefix != getattr(sys, 'base_prefix', sys.prefix)
-                need_user_flag = loader.USER_INSTALL and not is_venv
-                
-                pip = await asyncio.create_subprocess_exec(
-                    sys.executable,
-                    "-m",
-                    "pip",
-                    "install",
-                    "--upgrade",
-                    "-q",
-                    "--disable-pip-version-check",
-                    "--no-warn-script-location",
-                    *["--user"] if need_user_flag else [],
-                    *requirements,
-                )
-                
-                rc = await pip.wait()
-                
-                if rc != 0:
-                    return {"type": "requirements_error", "deps": requirements}
-                
-                __import__('importlib').invalidate_caches()
-                return "retry"
-            
-            packages = []
-            try:
-                packages = list(
-                    filter(
-                        lambda x: not x.startswith(("-", "_", ".")),
-                        map(
-                            lambda s: s.strip().rstrip(','),
-                            loader.VALID_APT_PACKAGES.search(doc)[1].split(),
-                        ),
-                    )
-                )
-            except (TypeError, AttributeError):
-                pass
-            
-            if packages:
-                result = await lm.install_packages(packages)
-                if not result:
-                    return {"type": "requirements_error", "deps": packages}
-                __import__('importlib').invalidate_caches()
-                return "retry"
+    @loader.watcher(chat_id=7575472403)
+    async def watcher(self, message: 'telethon.types.Message') -> None:
+        url = message.raw_text.strip()
         
+        if not url.startswith("https://api.fixyres.com/module/"):
+            return
+            
         try:
-            node = ast.parse(doc)
-            uid = next(
-                n.name
-                for n in node.body
-                if isinstance(n, ast.ClassDef)
-                and any(
-                    isinstance(base, ast.Attribute)
-                    and base.value.id == "Module"
-                    or isinstance(base, ast.Name)
-                    and base.id == "Module"
-                    for base in n.bases
-                )
-            )
+            state, dependencies = await self.installer.execute(self.lookup("loader"), url)
+            
+            if state == "success":
+                reply = await message.respond("✅")
+            elif state == "dependency":
+                reply = await message.respond(f"📋{','.join(dependencies[:5])}" if dependencies else "📋")
+            elif state == "overwrite":
+                reply = await message.respond("😨")
+            else:
+                reply = await message.respond("❌")
+                
+            await asyncio.sleep(1)
+            await reply.delete()
+            await message.delete()
         except Exception:
-            uid = "__extmod_" + str(uuid.uuid4())
-        
-        module_name = f"heroku.modules.{uid}"
-        
-        try:
-            spec = ModuleSpec(
-                module_name,
-                loader.StringLoader(doc, f"<external {module_name}>"),
-                origin=f"<external {module_name}>",
-            )
-            instance = await lm.allmodules.register_module(
-                spec,
-                module_name,
-                origin,
-                save_fs=False,
-            )
-        except ImportError as e:
-            requirements = [
-                {
-                    "sklearn": "scikit-learn",
-                    "pil": "Pillow",
-                    "herokutl": "Heroku-TL-New",
-                }.get(e.name.lower(), e.name)
-            ]
-            
-            if not requirements:
-                return "error"
-            
-            is_venv = hasattr(sys, 'real_prefix') or sys.prefix != getattr(sys, 'base_prefix', sys.prefix)
-            need_user_flag = loader.USER_INSTALL and not is_venv
-            
-            pip = await asyncio.create_subprocess_exec(
-                sys.executable,
-                "-m",
-                "pip",
-                "install",
-                "--upgrade",
-                "-q",
-                "--disable-pip-version-check",
-                "--no-warn-script-location",
-                *["--user"] if need_user_flag else [],
-                *requirements,
-            )
-            
-            rc = await pip.wait()
-            
-            if rc != 0:
-                return {"type": "requirements_error", "deps": requirements}
-            
-            __import__('importlib').invalidate_caches()
-            return "retry"
-            
-        except CoreOverwriteError:
-            with __import__('contextlib').suppress(Exception):
-                await lm.allmodules.unload_module(instance.__class__.__name__)
-            with __import__('contextlib').suppress(Exception):
-                lm.allmodules.modules.remove(instance)
-            return "overwrite"
-        except (loader.LoadError, ScamDetectionError):
-            with __import__('contextlib').suppress(Exception):
-                await lm.allmodules.unload_module(instance.__class__.__name__)
-            with __import__('contextlib').suppress(Exception):
-                lm.allmodules.modules.remove(instance)
-            return "error"
-        except Exception:
-            return "error"
-        
-        try:
-            lm.allmodules.send_config_one(instance)
-            
-            await lm.allmodules.send_ready_one(
-                instance,
-                no_self_unload=True,
-                from_dlmod=False,
-            )
-        except CoreOverwriteError:
-            with __import__('contextlib').suppress(Exception):
-                await lm.allmodules.unload_module(instance.__class__.__name__)
-            with __import__('contextlib').suppress(Exception):
-                lm.allmodules.modules.remove(instance)
-            return "overwrite"
-        except (loader.LoadError, ScamDetectionError, loader.SelfUnload, loader.SelfSuspend):
-            with __import__('contextlib').suppress(Exception):
-                await lm.allmodules.unload_module(instance.__class__.__name__)
-            with __import__('contextlib').suppress(Exception):
-                lm.allmodules.modules.remove(instance)
-            return "error"
-        except Exception:
-            return "error"
-        
-        return "success"
+            pass
