@@ -709,17 +709,13 @@ class FHeta(loader.Module):
                     self.api.token = self.token
             except Exception:
                 pass
-        
-        asyncio.create_task(self.sync())
-        
-    async def sync(self) -> None:
-        past = None
-        while True:
-            now = self.strings["lang"]
-            if now != past:
-                await self.api.send("dataset", params={"user_id": self.identifier, "lang": now})
-                past = now
-            await asyncio.sleep(1)
+    
+    @loader.loop(interval=1, autostart=True)
+    async def sync(self):
+        now = self.strings["lang"]
+        if now != getattr(self, "past_lang", None):
+            await self.api.send("dataset", params={"user_id": getattr(self, "identifier", 0), "lang": now})
+            self.past_lang = now
 
     async def answer(self, callback: Union[CallbackQuery, ChosenInlineResult], text: Optional[str] = None, alert: bool = False) -> None:
         try:
