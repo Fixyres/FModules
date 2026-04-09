@@ -683,25 +683,25 @@ class FHeta(loader.Module):
         self.bot = getattr(router, "_bot", getattr(router, "bot", getattr(self.inline, "bot", None)))
 
         if dispatcher:
-            async def fmiddleware(handler: Any, event: Any, data: Any) -> Any:
-                if self.lookup("FHeta") is not self:
+            if not getattr(dispatcher, "_fpatched", False):
+                
+                async def fmiddleware(handler: Any, event: Any, data: Any) -> Any:
+                    try:
+                        module = self.lookup("FHeta")
+                        
+                        if module and getattr(event, "result_id", "").startswith("fh_"):
+                            await module.click(event)
+                            return None
+                    except Exception:
+                        pass
+                        
                     return await handler(event, data)
                 
-                if getattr(event, "result_id", "").startswith("fh_"):
-                    await self.click(event)
-                    return None
-                return await handler(event, data)
-            
-            try:
-                middlewares = dispatcher.chosen_inline_result.middlewares
-                
-                for m in reversed(middlewares):
-                    if getattr(m, "__name__", "") == "fmiddleware":
-                        middlewares.remove(m)
-                
-                dispatcher.chosen_inline_result.middleware(fmiddleware)
-            except Exception:
-                pass
+                try:
+                    dispatcher.chosen_inline_result.middleware(fmiddleware)
+                    dispatcher._fpatched = True
+                except Exception:
+                    pass
 
         if self.token and not await self.api.fetch("validatetkn", user_id=str(self.identifier)):
             self.token = None
