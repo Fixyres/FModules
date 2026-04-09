@@ -683,16 +683,23 @@ class FHeta(loader.Module):
         self.bot = getattr(router, "_bot", getattr(router, "bot", getattr(self.inline, "bot", None)))
 
         if dispatcher:
-            async def middleware(handler: Any, event: Any, data: Any) -> Any:
+            async def fmiddleware(handler: Any, event: Any, data: Any) -> Any:
                 if self.lookup("FHeta") is not self:
                     return await handler(event, data)
+                
                 if getattr(event, "result_id", "").startswith("fh_"):
                     await self.click(event)
                     return None
                 return await handler(event, data)
             
             try:
-                dispatcher.chosen_inline_result.middleware(middleware)
+                middlewares = dispatcher.chosen_inline_result.middlewares
+                
+                for m in reversed(middlewares):
+                    if getattr(m, "__name__", "") == "fmiddleware":
+                        middlewares.remove(m)
+                
+                dispatcher.chosen_inline_result.middleware(fmiddleware)
             except Exception:
                 pass
 
