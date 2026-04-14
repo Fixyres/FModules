@@ -227,15 +227,8 @@ class FSecurity(loader.Module):
                 check = await self.check(code)
                 
                 if check is not True:
-                    msg, file_msg = self.context()
-                    target = self.target_chat(msg, file_msg)
-
-                    if not msg or not target:
-                        return await self.oreg(spec, name, origin, save_fs=save_fs)
-                    
-                    if msg:
-                        with suppress(Exception):
-                            msg.out = False
+                    msg, fmsg = self.context()
+                    target = self.target_chat(msg, fmsg)
 
                     if isinstance(check, dict):
                         status = check.get("level", "blocked")
@@ -244,10 +237,17 @@ class FSecurity(loader.Module):
                         status = "unavailable"
                         reason = ""
 
+                    if not msg or not target:
+                        raise loader.LoadError("")
+                    
+                    if msg:
+                        with suppress(Exception):
+                            msg.out = False
+
                     if status == "blocked":
                         text = self.format("blocked", reason)
                         raise loader.LoadError(text)
-                    
+                        
                     task = str(uuid.uuid4())
                     event = asyncio.Event()
                     self.tasks[task] = {"event": event, "decision": False}
