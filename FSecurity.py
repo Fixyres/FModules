@@ -101,6 +101,7 @@ class FSecurity(loader.Module):
         self.tasks = {}
         self.oreg = None
         self.oload = None
+        self.manual = set()
 
     async def client_ready(self, client, db):
         self.core = self.lookup("loader")
@@ -146,6 +147,8 @@ class FSecurity(loader.Module):
         original = self.oload
 
         async def load(_, *args, **kwargs):
+            token = object()
+            self.manual.add(id(asyncio.current_task()))
             base = utils.answer
 
             async def answer(message, response, *a, **k):
@@ -161,12 +164,24 @@ class FSecurity(loader.Module):
                         decoded = html.unescape(body[3:-4])
                         response = response.split("😖</tg-emoji>", 1)[0] + f'😖</tg-emoji> {decoded}' if decoded else response.split("😖</tg-emoji>", 1)[0] + '😖</tg-emoji>'
 
-                return await base(message, response, *a, **k)
+                try:
+                    return await base(message, response, *a, **k)
+                except Exception:
+                    with suppress(Exception):
+                        return await self._client.send_message(
+                            utils.get_chat_id(message),
+                            response,
+                            reply_to=getattr(message, "reply_to_msg_id", None),
+                            buttons=k.get("reply_markup"),
+                        )
+
+                    return message
 
             utils.answer = answer
             try:
                 return await original(*args, **kwargs)
             finally:
+                self.manual.discard(id(asyncio.current_task()))
                 if utils.answer is answer:
                     utils.answer = base
 
@@ -184,6 +199,7 @@ class FSecurity(loader.Module):
         msg = None
         fmsg = None
         autoload = False
+        manual = id(asyncio.current_task()) in self.manual
 
         while frame:
             locals = frame.f_locals
@@ -195,6 +211,7 @@ class FSecurity(loader.Module):
             ):
                 msg = locals['message']
                 fmsg = locals.get('msg')
+                manual = True
                 break
             if (
                 frame.f_code.co_name in {"_register_modules", "register_all"}
@@ -203,17 +220,20 @@ class FSecurity(loader.Module):
                 autoload = True
             frame = frame.f_back
             
-        return msg, fmsg, autoload
+        return msg, fmsg, autoload, manual
 
     def target_chat(self, msg=None, fmsg=None):
-        if msg:
-            with suppress(Exception):
-                target = copy.copy(msg)
-                if fmsg:
-                    target.reply_to_msg_id = fmsg.id
-                elif not getattr(target, 'reply_to_msg_id', None):
-                    target.reply_to_msg_id = target.id
-                return target
+        if not msg:
+            return None
+
+        if not fmsg:
+            return msg
+
+        with suppress(Exception):
+            target = copy.copy(msg)
+            target.reply_to_msg_id = fmsg.id
+            return target
+
         return None
 
     async def register(self, spec, name, origin="<core>", save_fs=False):
@@ -233,7 +253,7 @@ class FSecurity(loader.Module):
                 check = await self.check(code)
                 
                 if check is not True:
-                    msg, fmsg, autoload = self.context()
+                    msg, fmsg, autoload, manual = self.context()
                     target = self.target_chat(msg, fmsg)
 
                     if isinstance(check, dict):
@@ -246,12 +266,8 @@ class FSecurity(loader.Module):
                     if autoload:
                         return await self.oreg(spec, name, origin, save_fs=save_fs)
 
-                    if not msg or not target:
+                    if not manual or not msg or not target:
                         raise loader.LoadError("")
-                    
-                    if msg:
-                        with suppress(Exception):
-                            msg.out = False
 
                     if status == "blocked":
                         text = self.format("blocked", reason)
