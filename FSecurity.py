@@ -1,8 +1,7 @@
-__version__ = (1, 0, 1)
+__version__ = (1, 0, 2)
 
 # meta developer: @FModules
 # meta banner: https://raw.githubusercontent.com/Fixyres/FModules/refs/heads/main/assets/FSecurity/banner.png
-# meta fhsdesc: security, guard, shield, anti scam, antivirus
 # scope: hikka_min 2.0.0
 
 # ©️ Fixyres, 2024-2030
@@ -102,7 +101,6 @@ class FSecurity(loader.Module):
         self.tasks = {}
         self.oreg = None
         self.oload = None
-        self.manual = set()
 
     async def client_ready(self, client, db):
         self.core = self.lookup("loader")
@@ -223,7 +221,6 @@ class FSecurity(loader.Module):
         original = self.oload
 
         async def load(_, *args, **kwargs):
-            self.manual.add(id(asyncio.current_task()))
             base = utils.answer
 
             async def answer(message, response, *a, **k):
@@ -258,7 +255,6 @@ class FSecurity(loader.Module):
                     return await original(_, *args, **kwargs)
                 return await original(*args, **kwargs)
             finally:
-                self.manual.discard(id(asyncio.current_task()))
                 if utils.answer is answer:
                     utils.answer = base
 
@@ -275,8 +271,7 @@ class FSecurity(loader.Module):
         frame = sys._getframe()
         msg = None
         fmsg = None
-        autoload = False
-        manual = id(asyncio.current_task()) in self.manual
+        is_dlm_lm = False
 
         while frame:
             locals = frame.f_locals
@@ -286,24 +281,22 @@ class FSecurity(loader.Module):
                 and 'message' in locals
                 and hasattr(locals['message'], 'edit')
             ):
-                msg = locals['message']
-                fmsg = locals.get('msg')
-                manual = True
-                break
-            
-            if frame.f_code.co_name in {"dlmod", "download_and_install", "loadmod"}:
-                manual = True
-                if 'message' in locals and hasattr(locals['message'], 'edit'):
+                if not msg:
                     msg = locals['message']
-                    
-            if (
-                frame.f_code.co_name in {"_register_modules", "register_all"}
-                and locals.get("self") is self.modules
-            ):
-                autoload = True
+                    fmsg = locals.get('msg')
+
+            if frame.f_code.co_name in {"dlmod", "loadmod"}:
+                is_dlm_lm = True
+                if not msg and 'message' in locals and hasattr(locals['message'], 'edit'):
+                    msg = locals['message']
+
+            if frame.f_code.co_name == "download_and_install":
+                if not msg and 'message' in locals and hasattr(locals['message'], 'edit'):
+                    msg = locals['message']
+
             frame = frame.f_back
 
-        return msg, fmsg, autoload, manual
+        return msg, fmsg, is_dlm_lm
 
     def target_chat(self, msg=None, fmsg=None):
         if not msg:
@@ -341,7 +334,7 @@ class FSecurity(loader.Module):
                 check = await self.check(code)
                 
                 if check is not True:
-                    msg, fmsg, autoload, manual = self.context()
+                    msg, fmsg, is_dlm_lm = self.context()
                     target = self.target_chat(msg, fmsg)
 
                     if isinstance(check, dict):
@@ -351,46 +344,42 @@ class FSecurity(loader.Module):
                         status = "unavailable"
                         reason = ""
 
-                    if autoload:
-                        return await self.call_oreg(spec, name, origin, save_fs=save_fs)
-
-                    if not manual or not msg or not target:
+                    if status == "blocked":
+                        if msg and target:
+                            raise loader.LoadError(self.format("blocked", reason))
                         raise loader.LoadError("")
 
-                    if status == "blocked":
-                        text = self.format("blocked", reason)
-                        raise loader.LoadError(text)
+                    if is_dlm_lm and msg and target:
+                        task = str(uuid.uuid4())
+                        event = asyncio.Event()
+                        self.tasks[task] = {"event": event, "decision": False}
                         
-                    task = str(uuid.uuid4())
-                    event = asyncio.Event()
-                    self.tasks[task] = {"event": event, "decision": False}
-                    
-                    try:
-                        form = await self.inline.form(
-                            text=self.format(status, reason),
-                            message=target,
-                            reply_markup=self.buttons(task)
-                        )
-                        
-                        if not form:
-                            raise loader.LoadError(reason)
+                        try:
+                            form = await self.inline.form(
+                                text=self.format(status, reason),
+                                message=target,
+                                reply_markup=self.buttons(task)
+                            )
+                            
+                            if not form:
+                                raise loader.LoadError(reason)
  
-                        await asyncio.wait_for(event.wait(), timeout=60.0)
-                        
-                        if not self.tasks.pop(task)["decision"]:
+                            await asyncio.wait_for(event.wait(), timeout=60.0)
+                            
+                            if not self.tasks.pop(task)["decision"]:
+                                with suppress(Exception):
+                                    await form.delete()
+                                raise loader.LoadError("")
+                                  
+                        except asyncio.TimeoutError:
+                            self.tasks.pop(task, None)
                             with suppress(Exception):
                                 await form.delete()
                             raise loader.LoadError("")
-                              
-                    except asyncio.TimeoutError:
-                        self.tasks.pop(task, None)
-                        with suppress(Exception):
-                            await form.delete()
-                        raise loader.LoadError("")
-                    except loader.LoadError:
-                        raise
-                    except Exception:
-                        raise loader.LoadError("")
+                        except loader.LoadError:
+                            raise
+                        except Exception:
+                            raise loader.LoadError("")
                         
         return await self.call_oreg(spec, name, origin, save_fs=save_fs)
 
