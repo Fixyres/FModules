@@ -1,8 +1,6 @@
-__version__ = (1, 0, 2)
+__version__ = (1, 0, 3)
 
 # meta developer: @FModules
-# meta banner: https://raw.githubusercontent.com/Fixyres/FModules/refs/heads/main/assets/FSecurity/banner.png
-# scope: hikka_min 2.0.0
 
 # ©️ Fixyres, 2024-2030
 # 🌐 https://github.com/Fixyres/FModules
@@ -31,7 +29,8 @@ class FSecurity(loader.Module):
         "unavailable": "AI module check is unavailable.",
         "suspicious": "AI interrupted installation of a suspicious module, reason:",
         "blocked": "AI blocked module installation, reason:",
-        "continue": "Continue installation?"
+        "continue": "Continue installation?",
+        "strict_mode_doc": "Block loading modules by any method (not just dlm/lm) if the AI API is unavailable or the module is suspicious. On restart, this also applies to already installed modules."
     }
 
     strings_ru = {
@@ -40,7 +39,8 @@ class FSecurity(loader.Module):
         "unavailable": "Проверка модуля через ИИ недоступна.",
         "suspicious": "ИИ прервал установку подозрительного модуля, причина:",
         "blocked": "ИИ заблокировал установку модуля, причина:",
-        "continue": "Продолжить установку?"
+        "continue": "Продолжить установку?",
+        "strict_mode_doc": "Не позволять загружать модули любым методом (не только dlm/lm), если API ИИ недоступен или модуль подозрителен. При перезагрузке работает даже на уже установленные модули."
     }
 
     strings_ua = {
@@ -49,7 +49,8 @@ class FSecurity(loader.Module):
         "unavailable": "Перевірка модуля через ШІ недоступна.",
         "suspicious": "ШІ перервав встановлення підозрілого модуля, причина:",
         "blocked": "ШІ заблокував встановлення модуля, причина:",
-        "continue": "Продовжити встановлення?"
+        "continue": "Продовжити встановлення?",
+        "strict_mode_doc": "Не дозволяти завантажувати модулі будь-яким методом (не лише dlm/lm), якщо API ШІ недоступний або модуль підозрілий. При перезавантаженні працює навіть на вже встановлені модулі."
     }
 
     strings_de = {
@@ -58,7 +59,8 @@ class FSecurity(loader.Module):
         "unavailable": "Die KI-Modulprüfung ist nicht verfügbar.",
         "suspicious": "Die KI hat die Installation eines verdächtigen Moduls unterbrochen, Grund:",
         "blocked": "Die KI hat die Modulinstallation blockiert, Grund:",
-        "continue": "Installation fortsetzen?"
+        "continue": "Installation fortsetzen?",
+        "strict_mode_doc": "Das Laden von Modulen mit jeder Methode (nicht nur dlm/lm) blockieren, wenn die KI-API nicht verfügbar ist oder das Modul verdächtig ist. Beim Neustart gilt dies auch für bereits installierte Module."
     }
 
     strings_jp = {
@@ -67,7 +69,8 @@ class FSecurity(loader.Module):
         "unavailable": "AIモジュールのチェックが利用できません。",
         "suspicious": "AIが疑わしいモジュールのインストールを中断しました、理由：",
         "blocked": "AIがモジュールのインストールをブロックしました、理由：",
-        "continue": "インストールを続行しますか？"
+        "continue": "インストールを続行しますか？",
+        "strict_mode_doc": "AI APIが利用できない場合や疑わしいモジュールの場合、dlm/lmだけでなくすべての方法でモジュールの読み込みをブロックします。再起動時にはインストール済みモジュールにも適用されます。"
     }
 
     strings_tr = {
@@ -76,7 +79,8 @@ class FSecurity(loader.Module):
         "unavailable": "Yapay zeka modül kontrolü kullanılamıyor.",
         "suspicious": "Yapay zeka şüpheli bir modülün kurulumunu durdurdu, sebep:",
         "blocked": "Yapay zeka modül kurulumunu engelledi, sebep:",
-        "continue": "Kuruluma devam edilsin mi?"
+        "continue": "Kuruluma devam edilsin mi?",
+        "strict_mode_doc": "AI API kullanılamıyorsa veya modül şüpheliyse, sadece dlm/lm değil tüm yöntemlerle modül yüklenmesini engelle. Yeniden başlatmada zaten kurulu modüller için de geçerlidir."
     }
 
     strings_uz = {
@@ -85,7 +89,8 @@ class FSecurity(loader.Module):
         "unavailable": "AI modul tekshiruvi mavjud emas.",
         "suspicious": "AI shubhali modul o'rnatilishini to'xtatdi, sabab:",
         "blocked": "AI modul o'rnatilishini blokladi, sabab:",
-        "continue": "O'rnatishni davom ettirasizmi?"
+        "continue": "O'rnatishni davom ettirasizmi?",
+        "strict_mode_doc": "AI API mavjud bo'lmasa yoki modul shubhali bo'lsa, faqat dlm/lm emas, barcha usullar bilan modul yuklashni bloklash. Qayta ishga tushirishda allaqachon o'rnatilgan modullarga ham ta'sir qiladi."
     }
 
     strings_kz = {
@@ -94,10 +99,19 @@ class FSecurity(loader.Module):
         "unavailable": "AI модульін тексеру қолжетімсіз.",
         "suspicious": "AI күдікті модульді орнатуды тоқтатты, себебі:",
         "blocked": "AI модульді орнатуды бұғаттады, себебі:",
-        "continue": "Орнатуды жалғастырасыз ба?"
+        "continue": "Орнатуды жалғастырасыз ба?",
+        "strict_mode_doc": "AI API қолжетімсіз болса немесе модуль күдікті болса, тек dlm/lm ғана емес, барлық әдістермен модуль жүктеуді бұғаттау. Қайта іске қосқанда орнатылған модульдерге де қолданылады."
     }
 
     def __init__(self):
+        self.config = loader.ModuleConfig(
+            loader.ConfigValue(
+                "strict_mode",
+                False,
+                lambda: self.strings("strict_mode_doc"),
+                validator=loader.validators.Boolean(),
+            )
+        )
         self.tasks = {}
         self.oreg = None
         self.oload = None
@@ -107,6 +121,7 @@ class FSecurity(loader.Module):
         self.modules = self.core.allmodules
         self.restore_hooks()
         self.patch()
+        self.__origin__ = "<fsecurity>"
 
     async def on_unload(self):
         self.unpatch()
@@ -116,7 +131,7 @@ class FSecurity(loader.Module):
             form = aiohttp.FormData()
             form.add_field('file', code.encode('utf-8'), filename='module.py', content_type='text/x-python')
             form.add_field('lang', self.strings("lang") or "en")
-            
+
             async with aiohttp.ClientSession() as session:
                 async with session.post("https://api.fixyres.com/check", data=form, timeout=60) as resp:
                     if resp.status != 200:
@@ -125,12 +140,13 @@ class FSecurity(loader.Module):
         except Exception:
             return False
 
-    def format(self, state, reason=""):
+    def format(self, state, reason="", link=""):
+        link_html = f'\n🔗 <code>{utils.escape_html(link)}</code>' if link else ""
         if state == "unavailable":
-            return f'<b>{self.strings("unavailable")}</b>\n<b>{self.strings("continue")}</b>'
+            return f'<b>{self.strings("unavailable")}</b>{link_html}\n<b>{self.strings("continue")}</b>'
         if state == "suspicious":
-            return f'<b>{self.strings("suspicious")}</b>\n<blockquote expandable>{utils.escape_html(reason)}</blockquote>\n<b>{self.strings("continue")}</b>'
-        return f'<b>{self.strings("blocked")}</b>\n<blockquote expandable>{utils.escape_html(reason)}</blockquote>'
+            return f'<b>{self.strings("suspicious")}</b>{link_html}\n<blockquote expandable>{utils.escape_html(reason)}</blockquote>\n<b>{self.strings("continue")}</b>'
+        return f'<b>{self.strings("blocked")}</b>{link_html}\n<blockquote expandable>{utils.escape_html(reason)}</blockquote>'
 
     def buttons(self, task):
         return [[
@@ -151,35 +167,6 @@ class FSecurity(loader.Module):
         return None
 
     def restore_hooks(self):
-        with suppress(Exception):
-            cls_load = getattr(self.core.__class__, "load_module")
-            raw = getattr(cls_load, "__func__", cls_load)
-            if "FSecurity.patch.<locals>.load" in getattr(raw, "__qualname__", ""):
-                original = self.closure_var(raw, "original")
-                if original:
-                    setattr(
-                        self.core.__class__,
-                        "load_module",
-                        getattr(original, "__func__", original),
-                    )
-
-        with suppress(Exception):
-            cls_reg = getattr(self.modules.__class__, "register_module")
-            raw = getattr(cls_reg, "__func__", cls_reg)
-            if "FSecurity.patch.<locals>.register_module" in getattr(
-                raw,
-                "__qualname__",
-                "",
-            ):
-                old_self = self.closure_var(raw, "self")
-                original = getattr(old_self, "oreg", None) if old_self else None
-                if original:
-                    setattr(
-                        self.modules.__class__,
-                        "register_module",
-                        getattr(original, "__func__", original),
-                    )
-
         with suppress(Exception):
             inst_reg = getattr(self.modules, "register_module")
             owner = getattr(inst_reg, "__self__", None)
@@ -320,7 +307,7 @@ class FSecurity(loader.Module):
     async def register(self, spec, name, origin="<core>", save_fs=False):
         if origin != "<core>":
             code = ""
-            
+
             if hasattr(spec.loader, "data") and spec.loader.data:
                 code = spec.loader.data
                 if isinstance(code, bytes):
@@ -329,10 +316,10 @@ class FSecurity(loader.Module):
                 with suppress(Exception):
                     with open(origin, "r", encoding="utf-8") as f:
                         code = f.read()
-            
+
             if code:
                 check = await self.check(code)
-                
+
                 if check is not True:
                     msg, fmsg, is_dlm_lm = self.context()
                     target = self.target_chat(msg, fmsg)
@@ -344,33 +331,40 @@ class FSecurity(loader.Module):
                         status = "unavailable"
                         reason = ""
 
+                    link = origin if origin.startswith("http") else ""
+
                     if status == "blocked":
                         if msg and target:
-                            raise loader.LoadError(self.format("blocked", reason))
+                            raise loader.LoadError(self.format("blocked", reason, link))
                         raise loader.LoadError("")
 
-                    if is_dlm_lm and msg and target:
+                    should_block = is_dlm_lm or self.config["strict_mode"]
+
+                    if should_block and not (msg and target):
+                        raise loader.LoadError("")
+
+                    if should_block and msg and target:
                         task = str(uuid.uuid4())
                         event = asyncio.Event()
                         self.tasks[task] = {"event": event, "decision": False}
-                        
+
                         try:
                             form = await self.inline.form(
-                                text=self.format(status, reason),
+                                text=self.format(status, reason, link),
                                 message=target,
                                 reply_markup=self.buttons(task)
                             )
-                            
+
                             if not form:
                                 raise loader.LoadError(reason)
- 
+
                             await asyncio.wait_for(event.wait(), timeout=60.0)
-                            
+
                             if not self.tasks.pop(task)["decision"]:
                                 with suppress(Exception):
                                     await form.delete()
                                 raise loader.LoadError("")
-                                  
+
                         except asyncio.TimeoutError:
                             self.tasks.pop(task, None)
                             with suppress(Exception):
@@ -380,7 +374,7 @@ class FSecurity(loader.Module):
                             raise
                         except Exception:
                             raise loader.LoadError("")
-                        
+
         return await self.call_oreg(spec, name, origin, save_fs=save_fs)
 
     async def confirm(self, call, task, action):
