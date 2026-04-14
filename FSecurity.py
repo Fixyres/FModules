@@ -120,7 +120,7 @@ class FSecurity(loader.Module):
             form.add_field('lang', self.strings("lang") or "en")
             
             async with aiohttp.ClientSession() as session:
-                async with session.post("https://api.fixyres.com/check", data=form, timeout=30) as resp:
+                async with session.post("https://api.fixyres.com/check", data=form, timeout=60) as resp:
                     if resp.status != 200:
                         return False
                     return await resp.json()
