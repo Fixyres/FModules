@@ -183,6 +183,7 @@ class FSecurity(loader.Module):
         frame = sys._getframe()
         msg = None
         fmsg = None
+        autoload = False
 
         while frame:
             locals = frame.f_locals
@@ -195,9 +196,14 @@ class FSecurity(loader.Module):
                 msg = locals['message']
                 fmsg = locals.get('msg')
                 break
+            if (
+                frame.f_code.co_name in {"_register_modules", "register_all"}
+                and locals.get("self") is self.modules
+            ):
+                autoload = True
             frame = frame.f_back
             
-        return msg, fmsg
+        return msg, fmsg, autoload
 
     def target_chat(self, msg=None, fmsg=None):
         if msg:
@@ -227,7 +233,7 @@ class FSecurity(loader.Module):
                 check = await self.check(code)
                 
                 if check is not True:
-                    msg, fmsg = self.context()
+                    msg, fmsg, autoload = self.context()
                     target = self.target_chat(msg, fmsg)
 
                     if isinstance(check, dict):
@@ -236,6 +242,9 @@ class FSecurity(loader.Module):
                     else:
                         status = "unavailable"
                         reason = ""
+
+                    if autoload:
+                        return await self.oreg(spec, name, origin, save_fs=save_fs)
 
                     if not msg or not target:
                         raise loader.LoadError("")
