@@ -16,6 +16,7 @@ import aiohttp
 import html
 import sys
 import uuid
+import copy
 from contextlib import suppress
 from .. import loader, utils
 
@@ -181,27 +182,26 @@ class FSecurity(loader.Module):
     def context(self):
         frame = sys._getframe()
         msg = None
-        file_msg = None
+        fmsg = None
 
         while frame:
-            locals_dict = frame.f_locals
+            locals = frame.f_locals
             if (
                 frame.f_code.co_name == "load_module"
-                and locals_dict.get("self") is self.core
-                and 'message' in locals_dict
-                and hasattr(locals_dict['message'], 'edit')
+                and locals.get("self") is self.core
+                and 'message' in locals
+                and hasattr(locals['message'], 'edit')
             ):
-                msg = locals_dict['message']
-                file_msg = locals_dict.get('msg')
+                msg = locals['message']
+                fmsg = locals.get('msg')
                 break
             frame = frame.f_back
             
-        return msg, file_msg
+        return msg, fmsg
 
     def target_chat(self, msg=None, file_msg=None):
         if msg:
             with suppress(Exception):
-                import copy
                 target = copy.copy(msg)
                 if file_msg:
                     target.reply_to_msg_id = file_msg.id
