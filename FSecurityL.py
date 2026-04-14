@@ -1,5 +1,4 @@
 __version__ = (1, 0, 0)
-
 # meta developer: @FModules
 # meta banner: https://raw.githubusercontent.com/Fixyres/FModules/refs/heads/main/assets/FSecurity/banner.png
 # meta fhsdesc: security, guard, antiscam, antivirus
