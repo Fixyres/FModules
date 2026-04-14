@@ -2,6 +2,7 @@ __version__ = (1, 0, 1)
 
 # meta developer: @FModules
 # meta banner: https://raw.githubusercontent.com/Fixyres/FModules/refs/heads/main/assets/FSecurity/banner.png
+# meta fhsdesc: security, guard, shield, anti scam, antivirus
 # scope: hikka_min 2.0.0
 
 # ©️ Fixyres, 2024-2030
