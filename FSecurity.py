@@ -181,25 +181,33 @@ class FSecurity(loader.Module):
     def context(self):
         frame = sys._getframe()
         msg = None
+        file_msg = None
 
         while frame:
-            locals = frame.f_locals
+            locals_dict = frame.f_locals
             if (
                 frame.f_code.co_name == "load_module"
-                and locals.get("self") is self.core
-                and 'message' in locals
-                and hasattr(locals['message'], 'edit')
+                and locals_dict.get("self") is self.core
+                and 'message' in locals_dict
+                and hasattr(locals_dict['message'], 'edit')
             ):
-                msg = locals['message']
+                msg = locals_dict['message']
+                file_msg = locals_dict.get('msg')
                 break
             frame = frame.f_back
             
-        return msg
+        return msg, file_msg
 
-    def target_chat(self, msg=None):
+    def target_chat(self, msg=None, file_msg=None):
         if msg:
             with suppress(Exception):
-                return utils.get_chat_id(msg)
+                import copy
+                target = copy.copy(msg)
+                if file_msg:
+                    target.reply_to_msg_id = file_msg.id
+                elif not getattr(target, 'reply_to_msg_id', None):
+                    target.reply_to_msg_id = target.id
+                return target
         return None
 
     async def register(self, spec, name, origin="<core>", save_fs=False):
@@ -219,15 +227,14 @@ class FSecurity(loader.Module):
                 check = await self.check(code)
                 
                 if check is not True:
-                    msg = self.context()
-                    target = self.target_chat(msg)
+                    msg, file_msg = self.context()
+                    target = self.target_chat(msg, file_msg)
 
                     if not msg or not target:
                         return await self.oreg(spec, name, origin, save_fs=save_fs)
                     
                     if msg:
                         with suppress(Exception):
-                            await msg.delete()
                             msg.out = False
 
                     if isinstance(check, dict):
