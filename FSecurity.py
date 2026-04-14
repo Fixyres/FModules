@@ -121,6 +121,7 @@ class FSecurity(loader.Module):
         self.modules = self.core.allmodules
         self.restore_hooks()
         self.patch()
+        self.__origin__ = "<fsecurity>"
 
     async def on_unload(self):
         self.unpatch()
