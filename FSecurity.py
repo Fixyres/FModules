@@ -1,4 +1,4 @@
-__version__ = (1, 0, 0)
+__version__ = (1, 0, 1)
 
 # meta developer: @FModules
 # meta banner: https://raw.githubusercontent.com/Fixyres/FModules/refs/heads/main/assets/FSecurity/banner.png
@@ -106,6 +106,7 @@ class FSecurity(loader.Module):
     async def client_ready(self, client, db):
         self.core = self.lookup("loader")
         self.modules = self.core.allmodules
+        self.restore_hooks()
         self.patch()
 
     async def on_unload(self):
@@ -118,7 +119,7 @@ class FSecurity(loader.Module):
             form.add_field('lang', self.strings("lang") or "en")
             
             async with aiohttp.ClientSession() as session:
-                async with session.post("https://api.fixyres.com/check", data=form, timeout=180) as resp:
+                async with session.post("https://api.fixyres.com/check", data=form, timeout=30) as resp:
                     if resp.status != 200:
                         return False
                     return await resp.json()
@@ -138,6 +139,80 @@ class FSecurity(loader.Module):
             {"text": "✗", "callback": self.confirm, "args": (task, "no")}
         ]]
 
+    def closure_var(self, func, name):
+        raw = getattr(func, "__func__", func)
+        code = getattr(raw, "__code__", None)
+        closure = getattr(raw, "__closure__", None)
+        if not code or not closure or name not in code.co_freevars:
+            return None
+
+        with suppress(Exception):
+            return closure[code.co_freevars.index(name)].cell_contents
+
+        return None
+
+    def restore_hooks(self):
+        with suppress(Exception):
+            cls_load = getattr(self.core.__class__, "load_module")
+            raw = getattr(cls_load, "__func__", cls_load)
+            if "FSecurity.patch.<locals>.load" in getattr(raw, "__qualname__", ""):
+                original = self.closure_var(raw, "original")
+                if original:
+                    setattr(
+                        self.core.__class__,
+                        "load_module",
+                        getattr(original, "__func__", original),
+                    )
+
+        with suppress(Exception):
+            cls_reg = getattr(self.modules.__class__, "register_module")
+            raw = getattr(cls_reg, "__func__", cls_reg)
+            if "FSecurity.patch.<locals>.register_module" in getattr(
+                raw,
+                "__qualname__",
+                "",
+            ):
+                old_self = self.closure_var(raw, "self")
+                original = getattr(old_self, "oreg", None) if old_self else None
+                if original:
+                    setattr(
+                        self.modules.__class__,
+                        "register_module",
+                        getattr(original, "__func__", original),
+                    )
+
+        with suppress(Exception):
+            inst_reg = getattr(self.modules, "register_module")
+            owner = getattr(inst_reg, "__self__", None)
+            if (
+                owner
+                and owner is not self
+                and owner.__class__.__name__ == self.__class__.__name__
+            ):
+                original = getattr(owner, "oreg", None)
+                if original:
+                    if getattr(original, "__self__", None) is None:
+                        self.modules.register_module = original.__get__(
+                            self.modules,
+                            self.modules.__class__,
+                        )
+                    else:
+                        self.modules.register_module = original
+
+        with suppress(Exception):
+            inst_load = getattr(self.core, "load_module")
+            raw = getattr(inst_load, "__func__", inst_load)
+            if "FSecurity.patch.<locals>.load" in getattr(raw, "__qualname__", ""):
+                original = self.closure_var(raw, "original")
+                if original:
+                    if getattr(original, "__self__", None) is None:
+                        self.core.load_module = original.__get__(
+                            self.core,
+                            self.core.__class__,
+                        )
+                    else:
+                        self.core.load_module = original
+
     def patch(self):
         if not self.oreg:
             self.oreg = getattr(self.modules, "register_module")
@@ -147,7 +222,6 @@ class FSecurity(loader.Module):
         original = self.oload
 
         async def load(_, *args, **kwargs):
-            token = object()
             self.manual.add(id(asyncio.current_task()))
             base = utils.answer
 
@@ -179,6 +253,8 @@ class FSecurity(loader.Module):
 
             utils.answer = answer
             try:
+                if getattr(original, "__self__", None) is None:
+                    return await original(_, *args, **kwargs)
                 return await original(*args, **kwargs)
             finally:
                 self.manual.discard(id(asyncio.current_task()))
@@ -213,13 +289,19 @@ class FSecurity(loader.Module):
                 fmsg = locals.get('msg')
                 manual = True
                 break
+            
+            if frame.f_code.co_name in {"dlmod", "download_and_install", "loadmod"}:
+                manual = True
+                if 'message' in locals and hasattr(locals['message'], 'edit'):
+                    msg = locals['message']
+                    
             if (
                 frame.f_code.co_name in {"_register_modules", "register_all"}
                 and locals.get("self") is self.modules
             ):
                 autoload = True
             frame = frame.f_back
-            
+
         return msg, fmsg, autoload, manual
 
     def target_chat(self, msg=None, fmsg=None):
@@ -236,8 +318,13 @@ class FSecurity(loader.Module):
 
         return None
 
+    async def call_oreg(self, spec, name, origin="<core>", save_fs=False):
+        if getattr(self.oreg, "__self__", None) is None:
+            return await self.oreg(self.modules, spec, name, origin, save_fs=save_fs)
+        return await self.oreg(spec, name, origin, save_fs=save_fs)
+
     async def register(self, spec, name, origin="<core>", save_fs=False):
-        if origin != "<core>" and name != self.__module__:
+        if origin != "<core>":
             code = ""
             
             if hasattr(spec.loader, "data") and spec.loader.data:
@@ -264,7 +351,7 @@ class FSecurity(loader.Module):
                         reason = ""
 
                     if autoload:
-                        return await self.oreg(spec, name, origin, save_fs=save_fs)
+                        return await self.call_oreg(spec, name, origin, save_fs=save_fs)
 
                     if not manual or not msg or not target:
                         raise loader.LoadError("")
@@ -293,7 +380,7 @@ class FSecurity(loader.Module):
                             with suppress(Exception):
                                 await form.delete()
                             raise loader.LoadError("")
-                             
+                              
                     except asyncio.TimeoutError:
                         self.tasks.pop(task, None)
                         with suppress(Exception):
@@ -304,7 +391,7 @@ class FSecurity(loader.Module):
                     except Exception:
                         raise loader.LoadError("")
                         
-        return await self.oreg(spec, name, origin, save_fs=save_fs)
+        return await self.call_oreg(spec, name, origin, save_fs=save_fs)
 
     async def confirm(self, call, task, action):
         if task in self.tasks:
