@@ -26,9 +26,9 @@ class FSecurity(loader.Module):
     strings = {
         "name": "FSecurity",
         "lang": "en",
-        "unavailable": "AI module check is unavailable.",
-        "suspicious": "AI interrupted installation of a suspicious module, reason:",
-        "blocked": "AI blocked module installation, reason:",
+        "unavailable": "AI module check is unavailable{}",
+        "suspicious": "AI interrupted installation of a suspicious module{}, reason:",
+        "blocked": "AI blocked module installation{}, reason:",
         "continue": "Continue installation?",
         "strict_mode_doc": "Block loading modules by any method (not just dlm/lm) if the AI API is unavailable or the module is suspicious. On restart, this also applies to already installed modules."
     }
@@ -36,9 +36,9 @@ class FSecurity(loader.Module):
     strings_ru = {
         "lang": "ru",
         "_cls_doc": "Модуль для автоматической проверки устанавливаемых модулей через ИИ.",
-        "unavailable": "Проверка модуля через ИИ недоступна.",
-        "suspicious": "ИИ прервал установку подозрительного модуля, причина:",
-        "blocked": "ИИ заблокировал установку модуля, причина:",
+        "unavailable": "Проверка модуля через ИИ недоступна{}",
+        "suspicious": "ИИ прервал установку подозрительного модуля{}, причина:",
+        "blocked": "ИИ заблокировал установку модуля{}, причина:",
         "continue": "Продолжить установку?",
         "strict_mode_doc": "Не позволять загружать модули любым методом (не только dlm/lm), если API ИИ недоступен или модуль подозрителен. При перезагрузке работает даже на уже установленные модули."
     }
@@ -46,9 +46,9 @@ class FSecurity(loader.Module):
     strings_ua = {
         "lang": "ua",
         "_cls_doc": "Модуль для автоматичної перевірки встановлюваних модулів через ШІ.",
-        "unavailable": "Перевірка модуля через ШІ недоступна.",
-        "suspicious": "ШІ перервав встановлення підозрілого модуля, причина:",
-        "blocked": "ШІ заблокував встановлення модуля, причина:",
+        "unavailable": "Перевірка модуля через ШІ недоступна{}",
+        "suspicious": "ШІ перервав встановлення підозрілого модуля{}, причина:",
+        "blocked": "ШІ заблокував встановлення модуля{}, причина:",
         "continue": "Продовжити встановлення?",
         "strict_mode_doc": "Не дозволяти завантажувати модулі будь-яким методом (не лише dlm/lm), якщо API ШІ недоступний або модуль підозрілий. При перезавантаженні працює навіть на вже встановлені модулі."
     }
@@ -56,9 +56,9 @@ class FSecurity(loader.Module):
     strings_de = {
         "lang": "de",
         "_cls_doc": "Modul zur automatischen Prüfung installierter Module mit KI.",
-        "unavailable": "Die KI-Modulprüfung ist nicht verfügbar.",
-        "suspicious": "Die KI hat die Installation eines verdächtigen Moduls unterbrochen, Grund:",
-        "blocked": "Die KI hat die Modulinstallation blockiert, Grund:",
+        "unavailable": "Die KI-Modulprüfung ist nicht verfügbar{}",
+        "suspicious": "Die KI hat die Installation eines verdächtigen Moduls unterbrochen{}, Grund:",
+        "blocked": "Die KI hat die Modulinstallation blockiert{}, Grund:",
         "continue": "Installation fortsetzen?",
         "strict_mode_doc": "Das Laden von Modulen mit jeder Methode (nicht nur dlm/lm) blockieren, wenn die KI-API nicht verfügbar ist oder das Modul verdächtig ist. Beim Neustart gilt dies auch für bereits installierte Module."
     }
@@ -66,9 +66,9 @@ class FSecurity(loader.Module):
     strings_jp = {
         "lang": "jp",
         "_cls_doc": "AIでインストールされるモジュールを自動チェックするモジュール。",
-        "unavailable": "AIモジュールのチェックが利用できません。",
-        "suspicious": "AIが疑わしいモジュールのインストールを中断しました、理由：",
-        "blocked": "AIがモジュールのインストールをブロックしました、理由：",
+        "unavailable": "AIモジュールのチェックが利用できません{}",
+        "suspicious": "AIが疑わしいモジュールのインストールを中断しました{}、理由：",
+        "blocked": "AIがモジュールのインストールをブロックしました{}、理由：",
         "continue": "インストールを続行しますか？",
         "strict_mode_doc": "AI APIが利用できない場合や疑わしいモジュールの場合、dlm/lmだけでなくすべての方法でモジュールの読み込みをブロックします。再起動時にはインストール済みモジュールにも適用されます。"
     }
@@ -76,9 +76,9 @@ class FSecurity(loader.Module):
     strings_tr = {
         "lang": "tr",
         "_cls_doc": "Kurulan modülleri yapay zeka ile otomatik kontrol eden modül.",
-        "unavailable": "Yapay zeka modül kontrolü kullanılamıyor.",
-        "suspicious": "Yapay zeka şüpheli bir modülün kurulumunu durdurdu, sebep:",
-        "blocked": "Yapay zeka modül kurulumunu engelledi, sebep:",
+        "unavailable": "Yapay zeka modül kontrolü kullanılamıyor{}",
+        "suspicious": "Yapay zeka şüpheli bir modülün kurulumunu durdurdu{}, sebep:",
+        "blocked": "Yapay zeka modül kurulumunu engelledi{}, sebep:",
         "continue": "Kuruluma devam edilsin mi?",
         "strict_mode_doc": "AI API kullanılamıyorsa veya modül şüpheliyse, sadece dlm/lm değil tüm yöntemlerle modül yüklenmesini engelle. Yeniden başlatmada zaten kurulu modüller için de geçerlidir."
     }
@@ -86,9 +86,9 @@ class FSecurity(loader.Module):
     strings_uz = {
         "lang": "uz",
         "_cls_doc": "O'rnatilayotgan modullarni AI orqali avtomatik tekshiruvchi modul.",
-        "unavailable": "AI modul tekshiruvi mavjud emas.",
-        "suspicious": "AI shubhali modul o'rnatilishini to'xtatdi, sabab:",
-        "blocked": "AI modul o'rnatilishini blokladi, sabab:",
+        "unavailable": "AI modul tekshiruvi mavjud emas{}",
+        "suspicious": "AI shubhali modul o'rnatilishini to'xtatdi{}, sabab:",
+        "blocked": "AI modul o'rnatilishini blokladi{}, sabab:",
         "continue": "O'rnatishni davom ettirasizmi?",
         "strict_mode_doc": "AI API mavjud bo'lmasa yoki modul shubhali bo'lsa, faqat dlm/lm emas, barcha usullar bilan modul yuklashni bloklash. Qayta ishga tushirishda allaqachon o'rnatilgan modullarga ham ta'sir qiladi."
     }
@@ -96,9 +96,9 @@ class FSecurity(loader.Module):
     strings_kz = {
         "lang": "kz",
         "_cls_doc": "Орнатылатын модульдерді ЖИ арқылы автоматты тексеретін модуль.",
-        "unavailable": "AI модульін тексеру қолжетімсіз.",
-        "suspicious": "AI күдікті модульді орнатуды тоқтатты, себебі:",
-        "blocked": "AI модульді орнатуды бұғаттады, себебі:",
+        "unavailable": "AI модульін тексеру қолжетімсіз{}",
+        "suspicious": "AI күдікті модульді орнатуды тоқтатты{}, себебі:",
+        "blocked": "AI модульді орнатуды бұғаттады{}, себебі:",
         "continue": "Орнатуды жалғастырасыз ба?",
         "strict_mode_doc": "AI API қолжетімсіз болса немесе модуль күдікті болса, тек dlm/lm ғана емес, барлық әдістермен модуль жүктеуді бұғаттау. Қайта іске қосқанда орнатылған модульдерге де қолданылады."
     }
@@ -121,6 +121,7 @@ class FSecurity(loader.Module):
         self.modules = self.core.allmodules
         self.restore_hooks()
         self.patch()
+        self.__origin__ = "<fsecurity>"
 
     async def on_unload(self):
         self.unpatch()
@@ -140,12 +141,12 @@ class FSecurity(loader.Module):
             return False
 
     def format(self, state, reason="", link=""):
-        link_html = f'\n🔗 <code>{utils.escape_html(link)}</code>' if link else ""
+        link_part = f' (<code>{utils.escape_html(link)}</code>)' if link else ""
         if state == "unavailable":
-            return f'<b>{self.strings("unavailable")}</b>{link_html}\n<b>{self.strings("continue")}</b>'
+            return f'<b>{self.strings("unavailable").format(link_part)}</b>\n<b>{self.strings("continue")}</b>'
         if state == "suspicious":
-            return f'<b>{self.strings("suspicious")}</b>{link_html}\n<blockquote expandable>{utils.escape_html(reason)}</blockquote>\n<b>{self.strings("continue")}</b>'
-        return f'<b>{self.strings("blocked")}</b>{link_html}\n<blockquote expandable>{utils.escape_html(reason)}</blockquote>'
+            return f'<b>{self.strings("suspicious").format(link_part)}</b>\n<blockquote expandable>{utils.escape_html(reason)}</blockquote>\n<b>{self.strings("continue")}</b>'
+        return f'<b>{self.strings("blocked").format(link_part)}</b>\n<blockquote expandable>{utils.escape_html(reason)}</blockquote>'
 
     def buttons(self, task):
         return [[
