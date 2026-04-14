@@ -30,7 +30,7 @@ class FSecurity(loader.Module):
         "suspicious": "AI interrupted installation of a suspicious module{}, reason:",
         "blocked": "AI blocked module installation{}, reason:",
         "continue": "Continue installation?",
-        "strict_mode_doc": "Block loading modules by any method (not just dlm/lm) if the AI API is unavailable or the module is suspicious. On restart, this also applies to already installed modules."
+        "strict_mode_doc": "Block loading modules by any method (lm/dlm allowed) if the AI API is unavailable or the module is suspicious. On restart, this also applies to already installed modules."
     }
 
     strings_ru = {
@@ -40,7 +40,7 @@ class FSecurity(loader.Module):
         "suspicious": "ИИ прервал установку подозрительного модуля{}, причина:",
         "blocked": "ИИ заблокировал установку модуля{}, причина:",
         "continue": "Продолжить установку?",
-        "strict_mode_doc": "Не позволять загружать модули любым методом (не только dlm/lm), если API ИИ недоступен или модуль подозрителен. При перезагрузке работает даже на уже установленные модули."
+        "strict_mode_doc": "Не позволять загружать модули любым методом (lm/dlm разрешено), если API ИИ недоступен или модуль подозрителен. При перезагрузке работает даже на уже установленные модули."
     }
 
     strings_ua = {
@@ -50,7 +50,7 @@ class FSecurity(loader.Module):
         "suspicious": "ШІ перервав встановлення підозрілого модуля{}, причина:",
         "blocked": "ШІ заблокував встановлення модуля{}, причина:",
         "continue": "Продовжити встановлення?",
-        "strict_mode_doc": "Не дозволяти завантажувати модулі будь-яким методом (не лише dlm/lm), якщо API ШІ недоступний або модуль підозрілий. При перезавантаженні працює навіть на вже встановлені модулі."
+        "strict_mode_doc": "Не дозволяти завантажувати модулі будь-яким методом (lm/dlm дозволено), якщо API ШІ недоступний або модуль підозрілий. При перезавантаженні працює навіть на вже встановлені модулі."
     }
 
     strings_de = {
@@ -60,7 +60,7 @@ class FSecurity(loader.Module):
         "suspicious": "Die KI hat die Installation eines verdächtigen Moduls unterbrochen{}, Grund:",
         "blocked": "Die KI hat die Modulinstallation blockiert{}, Grund:",
         "continue": "Installation fortsetzen?",
-        "strict_mode_doc": "Das Laden von Modulen mit jeder Methode (nicht nur dlm/lm) blockieren, wenn die KI-API nicht verfügbar ist oder das Modul verdächtig ist. Beim Neustart gilt dies auch für bereits installierte Module."
+        "strict_mode_doc": "Das Laden von Modulen mit jeder Methode blockieren (lm/dlm erlaubt), wenn die KI-API nicht verfügbar ist oder das Modul verdächtig ist. Beim Neustart gilt dies auch für bereits installierte Module."
     }
 
     strings_jp = {
@@ -70,7 +70,7 @@ class FSecurity(loader.Module):
         "suspicious": "AIが疑わしいモジュールのインストールを中断しました{}、理由：",
         "blocked": "AIがモジュールのインストールをブロックしました{}、理由：",
         "continue": "インストールを続行しますか？",
-        "strict_mode_doc": "AI APIが利用できない場合や疑わしいモジュールの場合、dlm/lmだけでなくすべての方法でモジュールの読み込みをブロックします。再起動時にはインストール済みモジュールにも適用されます。"
+        "strict_mode_doc": "AI APIが利用できない場合や疑わしいモジュールの場合、すべての方法でモジュールの読み込みをブロックします（lm/dlmは許可）。再起動時にはインストール済みモジュールにも適用されます。"
     }
 
     strings_tr = {
@@ -80,7 +80,7 @@ class FSecurity(loader.Module):
         "suspicious": "Yapay zeka şüpheli bir modülün kurulumunu durdurdu{}, sebep:",
         "blocked": "Yapay zeka modül kurulumunu engelledi{}, sebep:",
         "continue": "Kuruluma devam edilsin mi?",
-        "strict_mode_doc": "AI API kullanılamıyorsa veya modül şüpheliyse, sadece dlm/lm değil tüm yöntemlerle modül yüklenmesini engelle. Yeniden başlatmada zaten kurulu modüller için de geçerlidir."
+        "strict_mode_doc": "AI API kullanılamıyorsa veya modül şüpheliyse, tüm yöntemlerle modül yüklenmesini engelle (lm/dlm izinli). Yeniden başlatmada zaten kurulu modüller için de geçerlidir."
     }
 
     strings_uz = {
@@ -90,7 +90,7 @@ class FSecurity(loader.Module):
         "suspicious": "AI shubhali modul o'rnatilishini to'xtatdi{}, sabab:",
         "blocked": "AI modul o'rnatilishini blokladi{}, sabab:",
         "continue": "O'rnatishni davom ettirasizmi?",
-        "strict_mode_doc": "AI API mavjud bo'lmasa yoki modul shubhali bo'lsa, faqat dlm/lm emas, barcha usullar bilan modul yuklashni bloklash. Qayta ishga tushirishda allaqachon o'rnatilgan modullarga ham ta'sir qiladi."
+        "strict_mode_doc": "AI API mavjud bo'lmasa yoki modul shubhali bo'lsa, barcha usullar bilan modul yuklashni bloklash (lm/dlm ruxsat etilgan). Qayta ishga tushirishda allaqachon o'rnatilgan modullarga ham ta'sir qiladi."
     }
 
     strings_kz = {
@@ -100,7 +100,7 @@ class FSecurity(loader.Module):
         "suspicious": "AI күдікті модульді орнатуды тоқтатты{}, себебі:",
         "blocked": "AI модульді орнатуды бұғаттады{}, себебі:",
         "continue": "Орнатуды жалғастырасыз ба?",
-        "strict_mode_doc": "AI API қолжетімсіз болса немесе модуль күдікті болса, тек dlm/lm ғана емес, барлық әдістермен модуль жүктеуді бұғаттау. Қайта іске қосқанда орнатылған модульдерге де қолданылады."
+        "strict_mode_doc": "AI API қолжетімсіз болса немесе модуль күдікті болса, барлық әдістермен модуль жүктеуді бұғаттау (lm/dlm рұқсат етілген). Қайта іске қосқанда орнатылған модульдерге де қолданылады."
     }
 
     def __init__(self):
