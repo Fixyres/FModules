@@ -1,6 +1,6 @@
 __version__ = (1, 0, 0)
-
 # meta developer: @FModules
+
 # ©️ Fixyres, 2024-2030
 # 🌐 https://github.com/Fixyres/FModules
 # Licensed under the Apache License, Version 2.0 (the "License");
