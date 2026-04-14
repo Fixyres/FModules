@@ -860,7 +860,7 @@ class FHeta(loader.Module):
             return {
                 "title": self.strings["prompt"],
                 "description": self.strings["hint"],
-                "message": f"{self.ui.emoji('error')} <b>{self.strings['prompt']}</b>",
+                "message": f"{self.ui.emoji('error')} <b>{self.strings['noquery'].format(prefix=f'<code>@{self.inline.bot_username} ')}</code></b>",
                 "thumb": "https://raw.githubusercontent.com/Fixyres/FModules/refs/heads/main/assets/FHeta/magnifying_glass.png"
             }
             
@@ -878,7 +878,7 @@ class FHeta(loader.Module):
             return {
                 "title": self.strings["retry"],
                 "description": self.strings["hint"],
-                "message": f"{self.ui.emoji('error')} <b>{self.strings['notfound'].format(query=utils.escape_html(query))}</b>",
+                "message": f"{self.ui.emoji('error')} <b>{self.strings['notfound'].format(query=f'<code>{utils.escape_html(query)}</code>')}</b>",
                 "thumb": "https://raw.githubusercontent.com/Fixyres/FModules/refs/heads/main/assets/FHeta/try_other_query.png"
             }
 
@@ -929,18 +929,18 @@ class FHeta(loader.Module):
         query = utils.get_args_raw(message)
         
         if not query:
-            return await utils.answer(message, f"{self.ui.emoji('error')} <b>{self.strings['noquery'].format(prefix=self.get_prefix())}</b>")
+            return await utils.answer(message, f"{self.ui.emoji('error')} <b>{self.strings['noquery'].format(prefix=f'<code>{self.get_prefix()}')}</code></b>")
             
         if len(query) > 168:
             return await utils.answer(message, f"{self.ui.emoji('warn')} <b>{self.strings['toolong']}</b>")
 
-        message = await utils.answer(message, f"{self.ui.emoji('search')} <b>{self.strings['search'].format(query=utils.escape_html(query))}</b>")
+        message = await utils.answer(message, f"{self.ui.emoji('search')} <b>{self.strings['search'].format(query=f'<code>{utils.escape_html(query)}</code>')}</b>")
         
         modules = await self.api.fetch("search", query=query, inline="false", token=self.token, user_id=self.identifier, ood=str(self.config["only_official_developers"]).lower())
         
         if not modules or not isinstance(modules, list):
-            return await utils.answer(message, f"{self.ui.emoji('error')} <b>{self.strings['notfound'].format(query=utils.escape_html(query))}</b>")
-
+            return await utils.answer(message, f"{self.ui.emoji('error')} <b>{self.strings['notfound'].format(query=f'<code>{utils.escape_html(query)}</code>')}</b>")
+            
         data = modules[0]
         buttons = self.ui.buttons(data.get("install", ""), data, 0, modules, query)
         form = await self.inline.form("ㅤ", message, reply_markup=buttons, silent=True)
