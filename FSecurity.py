@@ -199,12 +199,12 @@ class FSecurity(loader.Module):
             
         return msg, fmsg
 
-    def target_chat(self, msg=None, file_msg=None):
+    def target_chat(self, msg=None, fmsg=None):
         if msg:
             with suppress(Exception):
                 target = copy.copy(msg)
-                if file_msg:
-                    target.reply_to_msg_id = file_msg.id
+                if fmsg:
+                    target.reply_to_msg_id = fmsg.id
                 elif not getattr(target, 'reply_to_msg_id', None):
                     target.reply_to_msg_id = target.id
                 return target
