@@ -1,6 +1,6 @@
 __version__ = (9, 3, 9)
 
-# meta developer: @FModules
+# meta developer: @NFModules
 # meta pic: https://raw.githubusercontent.com/Fixyres/FModules/refs/heads/main/assets/FHeta/logo.png
 # meta banner: https://raw.githubusercontent.com/Fixyres/FModules/refs/heads/main/assets/FHeta/logo.png
 # scope: hikka_min 2.0.0
