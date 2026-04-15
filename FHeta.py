@@ -661,7 +661,7 @@ class FHeta(loader.Module):
         self.ui = FHetaUI(self)
         
         await self.request_join(
-            "FHeta_Updates",
+            "NFHeta_Updates",
             f"{self.ui.emoji('channel')} {self.strings('channel')}"
         )
         
