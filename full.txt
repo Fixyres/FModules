@@ -2,4 +2,3 @@ akinator
 FHeta
 BSR
 SCD
-FSecurityL
