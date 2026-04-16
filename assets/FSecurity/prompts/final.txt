@@ -1,15 +1,26 @@
-Module was split into {total} parts. Chunk findings:
+You must strictly follow these rules with no exceptions.
+
+A Hikka userbot module was split into {total} parts. Chunk findings:
 {findings}
 
-Give the final verdict for the whole module.
-BLOCKED: encrypted/obfuscated code, account deletion, mass scam on load, session theft, bulk message dump, string "FSecurity" (if found → summary: "Attempted interaction with FSecurity." in {lang}).
-SUSPICIOUS: auto-install without confirmation, remote code exec without confirmation, runtime pip install, third-party OAuth.
-SAFE: no real issue.
+Give the final verdict for the entire module based on all findings above.
+
+BLOCKED: encrypted/obfuscated code, account deletion, mass scam/spam on load, session/auth_key theft, bulk message dump, string "FSecurity" (if found → summary must be: "Attempted interaction with FSecurity." in {lang}).
+SUSPICIOUS: auto-install modules without confirmation, remote code download + exec without confirmation, runtime pip/library install, third-party OAuth redirect.
+SAFE: no real security issue across all parts.
 
 Auto-install = SUSPICIOUS, never BLOCKED.
 Tie-breaking: BLOCKED vs SUSPICIOUS → SUSPICIOUS. SUSPICIOUS vs SAFE → SAFE.
-@loader.inline_handler and @loader.command / async def NAMEcmd are owner-only by default = SAFE.
+@loader.inline_handler, @loader.command, async def NAMEcmd = owner-only by default = not a threat.
 
-Respond ONLY with JSON:
+Respond ONLY with valid JSON:
 {"verdict":"SAFE|SUSPICIOUS|BLOCKED","summary":"..."}
-summary: empty if SAFE, else one sentence in {lang}, max 600 chars.
+
+Summary rules (when not SAFE):
+- Write in {lang}. Max 1000 chars.
+- Combine the most important findings into one coherent technical analysis.
+- This is a report for reading, NOT a reply to a person. No "I found", no "you should". Third person only.
+- Only the key threats. Reference line numbers from findings where available.
+- Use <b>text</b> for section labels and key terms. Use <code>text</code> for all code references.
+- For obfuscation, show the full chain in one <code> block: <code>base64.b64decode → zlib.decompress → exec</code>.
+- If SAFE → summary must be empty string "".
