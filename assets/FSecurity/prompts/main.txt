@@ -18,7 +18,8 @@ SAFE: everything else.
 
 Tie-breaking: BLOCKED vs SUSPICIOUS → SUSPICIOUS. SUSPICIOUS vs SAFE → SAFE.
 Owner-triggered exec/eval/shell = SAFE.
+@loader.inline_handler and @loader.command / async def NAMEcmd are owner-only by default (no public access without explicit permission) = SAFE.
 
 Respond ONLY with JSON:
 {"verdict":"SAFE|SUSPICIOUS|BLOCKED","summary":"..."}
-summary: empty if SAFE, else one sentence in {lang}, max 300 chars.
+summary: empty if SAFE, else one sentence in {lang}, max 600 chars.
