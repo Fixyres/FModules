@@ -28,14 +28,15 @@ Respond ONLY with valid JSON:
 Summary rules (when not SAFE):
 - Write in {lang}. Max 1000 chars.
 - Be maximally informative and maximally brief at the same time.
+- Every sentence must add NEW information. NEVER repeat the same point in different words. NEVER pad or rephrase what was already said. No filler.
 - Describe ONLY what is found in the code. Factual statements only.
 - NEVER write what rule was matched, NEVER reference classification criteria, NEVER say "this matches BLOCKED/SUSPICIOUS criteria", NEVER say "this behavior corresponds to signs of...".
-- NEVER write generic threat conclusions like "the main threat is remote code execution" or "this poses a risk of...". Just state what the code does.
+- NEVER write generic conclusions like "the main threat is...", "this poses a risk of...", "this indicates malicious activity", "this is an attempt to hide...". Just state what the code does.
 - Write as a factual technical note, NOT a reply to a person. No "I found", "you should", "I recommend". Third person only.
 - Do NOT describe what the module does overall or list safe parts. Only the problematic code.
 - Reference the approximate line number: "line NN —".
 - Use <code>text</code> for code references: function names, variables, URLs, string literals.
-- For obfuscation, show the full decoding chain inside one <code> block: <code>base64.b64decode → zlib.decompress → marshal.loads → exec</code>.
-- Good example: "line 15 — <code>base64.b64decode → zlib.decompress → exec</code> decodes and executes hidden code. line 42 — <code>client.session.save()</code> result is sent via <code>requests.post</code> to <code>https://evil.com/api</code>."
-- Bad example: "This behavior corresponds to signs of BLOCKED. The main threat is session theft and remote code execution."
+- When obfuscation/encoding is found, you MUST show the decoding chain as arrows inside one <code> block. This is mandatory, not optional. Example: <code>base64.b64decode → zlib.decompress → marshal.loads → exec</code>.
+- Good summary: "line 15 — <code>base64.b64decode → zlib.decompress → marshal.loads → exec</code>. line 42 — <code>client.session.save()</code> sent via <code>requests.post</code> to <code>https://evil.com/api</code>."
+- Bad summary: "Encrypted code is decoded using base64.b64decode, zlib.decompress, marshal.loads and exec. This is an attempt to hide the real behavior of the module through several layers of decoding, indicating concealment of malicious activity."
 - If SAFE → summary must be empty string "".
