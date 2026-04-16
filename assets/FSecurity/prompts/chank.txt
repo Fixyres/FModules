@@ -6,7 +6,8 @@ SUSPICIOUS: auto-install modules without confirmation, remote code exec without 
 CLEAN: no issue.
 
 Tie-breaking: BLOCKED vs SUSPICIOUS → SUSPICIOUS. SUSPICIOUS vs CLEAN → CLEAN.
+@loader.inline_handler and @loader.command / async def NAMEcmd are owner-only by default = SAFE.
 
 Respond ONLY with JSON:
 {"chunk_verdict":"CLEAN|SUSPICIOUS|BLOCKED","findings":"..."}
-findings: empty if CLEAN, else one sentence in {lang}, max 300 chars.
+findings: empty if CLEAN, else one sentence in {lang}, max 600 chars.
