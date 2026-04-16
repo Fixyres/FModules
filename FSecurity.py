@@ -127,6 +127,7 @@ class FSecurity(loader.Module):
         self.oload = None
 
     async def client_ready(self, client, db):
+        self.__origin__ = "<fsecurity>"
         self.core = self.lookup("loader")
         self.modules = self.core.allmodules
         self.restore_hooks()
