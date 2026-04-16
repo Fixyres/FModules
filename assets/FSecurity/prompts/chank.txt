@@ -8,7 +8,7 @@ SUSPICIOUS: watcher/scheduler/client_ready auto-installing modules without owner
 CLEAN: no security issue in this chunk.
 
 Tie-breaking: BLOCKED vs SUSPICIOUS → SUSPICIOUS. SUSPICIOUS vs CLEAN → CLEAN.
-@loader.inline_handler, @loader.command, async def NAMEcmd = owner-only by default = not a threat.
+@loader.inline_handler, @loader.command, async def NAMEcmd, async def NAME_inline_handler = owner-only by default = not a threat.
 Owner-triggered exec/eval/shell = not a threat.
 
 Respond ONLY with valid JSON:
