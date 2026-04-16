@@ -5,7 +5,7 @@ A Hikka userbot module was split into {total} parts. Chunk findings:
 
 Give the final verdict for the entire module based on all findings above.
 
-BLOCKED: encrypted/obfuscated code, account deletion, mass scam/spam on load, session/auth_key theft, bulk message dump, string "FSecurity" (if found → summary must be: "Attempted interaction with FSecurity." in {lang}).
+BLOCKED: encrypted/obfuscated code, account deletion, mass scam/spam on load, session/auth_key theft, bulk message dump, string "FSecurity" (if found → summary must be ONLY: "Attempted interaction with FSecurity." translated to {lang}, nothing else).
 SUSPICIOUS: auto-install modules without confirmation, remote code download + exec without confirmation, runtime pip/library install, third-party OAuth redirect.
 SAFE: no real security issue across all parts.
 
@@ -20,7 +20,8 @@ Summary rules (when not SAFE):
 - Write in {lang}. Max 1000 chars.
 - Combine the most important findings into one coherent technical analysis.
 - This is a report for reading, NOT a reply to a person. No "I found", no "you should". Third person only.
+- Do NOT mention which rule was triggered or explain criteria. Just describe what the code does.
 - Only the key threats. Reference line numbers from findings where available.
-- Use <b>text</b> for section labels and key terms. Use <code>text</code> for all code references.
+- Use <code>text</code> for all code references: function names, variables, URLs, string literals.
 - For obfuscation, show the full chain in one <code> block: <code>base64.b64decode → zlib.decompress → exec</code>.
 - If SAFE → summary must be empty string "".
