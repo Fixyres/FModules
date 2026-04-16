@@ -27,7 +27,7 @@ class FSecurity(loader.Module):
         "blocked": "AI blocked module installation{}, reason:",
         "continue": "Continue installation?",
         "strict_mode_doc": "Block loading modules by any method (lm/dlm allowed) if the AI API is unavailable or the module is suspicious. On restart, this also applies to already installed modules.",
-        "nvidia_api_key_doc": "API key from build.nvidia.com."
+        "nvidia_api_key_doc": "API key from build.nvidia.com, used for AI checks. If not specified, a public key from GitHub will be used."
     }
 
     strings_ru = {
@@ -38,7 +38,7 @@ class FSecurity(loader.Module):
         "blocked": "ИИ заблокировал установку модуля{}, причина:",
         "continue": "Продолжить установку?",
         "strict_mode_doc": "Не позволять загружать модули любым методом (lm/dlm разрешено), если API ИИ недоступен или модуль подозрителен. При перезагрузке работает даже на уже установленные модули.",
-        "nvidia_api_key_doc": "API ключ от build.nvidia.com."
+        "nvidia_api_key_doc": "API ключ от build.nvidia.com, используется для проверки через ИИ. Если вы его не укажете, будет использоваться общий ключ с GitHub."
     }
 
     strings_ua = {
@@ -49,7 +49,7 @@ class FSecurity(loader.Module):
         "blocked": "ШІ заблокував встановлення модуля{}, причина:",
         "continue": "Продовжити встановлення?",
         "strict_mode_doc": "Не дозволяти завантажувати модулі будь-яким методом (lm/dlm дозволено), якщо API ШІ недоступний або модуль підозрілий. При перезавантаженні працює навіть на вже встановлені модулі.",
-        "nvidia_api_key_doc": "API ключ від build.nvidia.com."
+        "nvidia_api_key_doc": "API ключ від build.nvidia.com, використовується для перевірки через ШІ. Якщо ви його не вкажете, буде використовуватися загальний ключ з GitHub."
     }
 
     strings_de = {
@@ -60,7 +60,7 @@ class FSecurity(loader.Module):
         "blocked": "Die KI hat die Modulinstallation blockiert{}, Grund:",
         "continue": "Installation fortsetzen?",
         "strict_mode_doc": "Das Laden von Modulen mit jeder Methode blockieren (lm/dlm erlaubt), wenn die KI-API nicht verfügbar ist oder das Modul verdächtig ist. Beim Neustart gilt dies auch für bereits installierte Module.",
-        "nvidia_api_key_doc": "API-Schlüssel von build.nvidia.com."
+        "nvidia_api_key_doc": "API-Schlüssel von build.nvidia.com, der für KI-Prüfungen verwendet wird. Wenn nicht angegeben, wird ein öffentlicher Schlüssel von GitHub verwendet."
     }
 
     strings_jp = {
@@ -71,7 +71,7 @@ class FSecurity(loader.Module):
         "blocked": "AIがモジュールのインストールをブロックしました{}、理由：",
         "continue": "インストールを続行しますか？",
         "strict_mode_doc": "AI APIが利用できない場合や疑わしいモジュールの場合、すべての方法でモジュールの読み込みをブロックします（lm/dlmは許可）。再起動時にはインストール済みモジュールにも適用されます。",
-        "nvidia_api_key_doc": "build.nvidia.com のAPIキー。"
+        "nvidia_api_key_doc": "build.nvidia.com のAPIキー。AIチェックに使用されます。指定しない場合は、GitHubのパブリックキーが使用されます。"
     }
 
     strings_tr = {
@@ -82,7 +82,7 @@ class FSecurity(loader.Module):
         "blocked": "Yapay zeka modül kurulumunu engelledi{}, sebep:",
         "continue": "Kuruluma devam edilsin mi?",
         "strict_mode_doc": "AI API kullanılamıyorsa veya modül şüpheliyse, tüm yöntemlerle modül yüklenmesini engelle (lm/dlm izinli). Yeniden başlatmada zaten kurulu modüller için de geçerlidir.",
-        "nvidia_api_key_doc": "build.nvidia.com API anahtarı."
+        "nvidia_api_key_doc": "Yapay zeka kontrolleri için kullanılan build.nvidia.com API anahtarı. Belirtilmezse GitHub'daki genel anahtar kullanılacaktır."
     }
 
     strings_uz = {
@@ -93,7 +93,7 @@ class FSecurity(loader.Module):
         "blocked": "AI modul o'rnatilishini blokladi{}, sabab:",
         "continue": "O'rnatishni davom ettirasizmi?",
         "strict_mode_doc": "AI API mavjud bo'lmasa yoki modul shubhali bo'lsa, barcha usullar bilan modul yuklashni bloklash (lm/dlm ruxsat etilgan). Qayta ishga tushirishda allaqachon o'rnatilgan modullarga ham ta'sir qiladi.",
-        "nvidia_api_key_doc": "build.nvidia.com API kaliti."
+        "nvidia_api_key_doc": "build.nvidia.com API kaliti, AI orqali tekshirish uchun ishlatiladi. Agar ko'rsatmasangiz, GitHub-dan umumiy kalit ishlatiladi."
     }
 
     strings_kz = {
@@ -104,7 +104,7 @@ class FSecurity(loader.Module):
         "blocked": "AI модульді орнатуды бұғаттады{}, себебі:",
         "continue": "Орнатуды жалғастырасыз ба?",
         "strict_mode_doc": "AI API қолжетімсіз болса немесе модуль күдікті болса, барлық әдістермен модуль жүктеуді бұғаттау (lm/dlm рұқсат етілген). Қайта іске қосқанда орнатылған модульдерге де қолданылады.",
-        "nvidia_api_key_doc": "build.nvidia.com API кілті."
+        "nvidia_api_key_doc": "build.nvidia.com API кілті, ЖИ арқылы тексеру үшін қолданылады. Егер оны көрсетпесеңіз, GitHub-тан ортақ кілт пайдаланылады."
     }
 
     def __init__(self):
