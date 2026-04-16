@@ -18,7 +18,7 @@ SUSPICIOUS (any single match, only if BLOCKED did not trigger):
 
 SAFE: everything that does not match any rule above.
 - Owner-triggered exec/eval/shell = always SAFE.
-- @loader.inline_handler, @loader.command, async def NAMEcmd = owner-only by default (no public access without explicit permission) = SAFE.
+- @loader.inline_handler, @loader.command, async def NAMEcmd, async def NAME_inline_handler = owner-only by default (no public access without explicit permission) = SAFE.
 
 Tie-breaking: BLOCKED vs SUSPICIOUS → SUSPICIOUS. SUSPICIOUS vs SAFE → SAFE.
 
