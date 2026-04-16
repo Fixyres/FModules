@@ -17,11 +17,10 @@ Respond ONLY with valid JSON:
 Findings rules (when not CLEAN):
 - Write in {lang}. Max 1000 chars.
 - Be maximally informative and maximally brief.
-- Every sentence must add NEW information. NEVER repeat or rephrase. No filler.
 - Describe ONLY what is found in the code. Factual statements only.
-- NEVER reference classification rules. NEVER write generic conclusions like "this indicates...", "this poses a risk of...", "this is an attempt to hide...".
+- NEVER reference classification rules or criteria. NEVER write generic threat conclusions like "the main threat is..." or "this poses a risk of...".
 - Factual technical note, not a reply. No "I found", no "you should". Third person only.
 - Only the problematic code in this chunk. Reference approximate line numbers.
 - Use <code>text</code> for code references.
-- When obfuscation is found, you MUST show the chain as arrows in one <code> block: <code>base64.b64decode → zlib.decompress → exec</code>.
+- For obfuscation chains, one <code> block: <code>base64.b64decode → zlib.decompress → exec</code>.
 - If CLEAN → findings must be empty string "".
