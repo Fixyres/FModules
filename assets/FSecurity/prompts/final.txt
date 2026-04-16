@@ -18,10 +18,13 @@ Respond ONLY with valid JSON:
 
 Summary rules (when not SAFE):
 - Write in {lang}. Max 1000 chars.
-- Combine the most important findings into one coherent technical analysis.
-- This is a report for reading, NOT a reply to a person. No "I found", no "you should". Third person only.
-- Do NOT mention which rule was triggered or explain criteria. Just describe what the code does.
-- Only the key threats. Reference line numbers from findings where available.
-- Use <code>text</code> for all code references: function names, variables, URLs, string literals.
-- For obfuscation, show the full chain in one <code> block: <code>base64.b64decode → zlib.decompress → exec</code>.
+- Combine the most important findings into one coherent factual note.
+- Be maximally informative and maximally brief.
+- Describe ONLY what is found in the code. Factual statements only.
+- NEVER reference classification rules or criteria. NEVER say "this matches BLOCKED criteria" or "this behavior corresponds to signs of...".
+- NEVER write generic threat conclusions like "the main threat is..." or "this poses a risk of...". Just state what the code does.
+- Factual technical note, not a reply. No "I found", no "you should". Third person only.
+- Only the problematic code. Reference line numbers from findings where available.
+- Use <code>text</code> for all code references.
+- For obfuscation, one <code> block: <code>base64.b64decode → zlib.decompress → exec</code>.
 - If SAFE → summary must be empty string "".
