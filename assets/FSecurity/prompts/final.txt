@@ -8,7 +8,8 @@ SAFE: no real issue.
 
 Auto-install = SUSPICIOUS, never BLOCKED.
 Tie-breaking: BLOCKED vs SUSPICIOUS → SUSPICIOUS. SUSPICIOUS vs SAFE → SAFE.
+@loader.inline_handler and @loader.command / async def NAMEcmd are owner-only by default = SAFE.
 
 Respond ONLY with JSON:
 {"verdict":"SAFE|SUSPICIOUS|BLOCKED","summary":"..."}
-summary: empty if SAFE, else one sentence in {lang}, max 300 chars.
+summary: empty if SAFE, else one sentence in {lang}, max 600 chars.
