@@ -21,7 +21,7 @@ class FSecurity(loader.Module):
 
     strings = {
         "name": "FSecurity",
-        "lang": "en",
+        "lang": "English",
         "unavailable": "AI module{} check is unavailable.",
         "suspicious": "AI interrupted installation of a suspicious module{}, reason:",
         "blocked": "AI blocked module installation{}, reason:",
@@ -31,7 +31,7 @@ class FSecurity(loader.Module):
     }
 
     strings_ru = {
-        "lang": "ru",
+        "lang": "Russian",
         "_cls_doc": "Модуль для автоматической проверки устанавливаемых модулей через ИИ.",
         "unavailable": "Проверка модуля{} через ИИ недоступна.",
         "suspicious": "ИИ прервал установку подозрительного модуля{}, причина:",
@@ -42,7 +42,7 @@ class FSecurity(loader.Module):
     }
 
     strings_ua = {
-        "lang": "ua",
+        "lang": "Ukraine",
         "_cls_doc": "Модуль для автоматичної перевірки встановлюваних модулів через ШІ.",
         "unavailable": "Перевірка модуля{} через ШІ недоступна.",
         "suspicious": "ШІ перервав встановлення підозрілого модуля{}, причина:",
@@ -53,7 +53,7 @@ class FSecurity(loader.Module):
     }
 
     strings_de = {
-        "lang": "de",
+        "lang": "Germany",
         "_cls_doc": "Modul zur automatischen Prüfung installierter Module mit KI.",
         "unavailable": "Die KI-Modulprüfung{} ist nicht verfügbar.",
         "suspicious": "Die KI hat die Installation eines verdächtigen Moduls unterbrochen{}, Grund:",
@@ -64,7 +64,7 @@ class FSecurity(loader.Module):
     }
 
     strings_jp = {
-        "lang": "jp",
+        "lang": "Japanese",
         "_cls_doc": "AIでインストールされるモジュールを自動チェックするモジュール。",
         "unavailable": "AIモジュール{}のチェックが利用できません。",
         "suspicious": "AIが疑わしいモジュールのインストールを中断しました{}、理由：",
@@ -75,7 +75,7 @@ class FSecurity(loader.Module):
     }
 
     strings_tr = {
-        "lang": "tr",
+        "lang": "Turkish",
         "_cls_doc": "Kurulan modülleri yapay zeka ile otomatik kontrol eden modül.",
         "unavailable": "Yapay zeka modül{} kontrolü kullanılamıyor.",
         "suspicious": "Yapay zeka şüpheli bir modülün kurulumunu durdurdu{}, sebep:",
@@ -86,7 +86,7 @@ class FSecurity(loader.Module):
     }
 
     strings_uz = {
-        "lang": "uz",
+        "lang": "Uzbekistan",
         "_cls_doc": "O'rnatilayotgan modullarni AI orqali avtomatik tekshiruvchi modul.",
         "unavailable": "AI modul{} tekshiruvi mavjud emas.",
         "suspicious": "AI shubhali modul o'rnatilishini to'xtatdi{}, sabab:",
@@ -97,7 +97,7 @@ class FSecurity(loader.Module):
     }
 
     strings_kz = {
-        "lang": "kz",
+        "lang": "Kazakhstan",
         "_cls_doc": "Орнатылатын модульдерді ЖИ арқылы автоматты тексеретін модуль.",
         "unavailable": "AI модуль{} тексеру қолжетімсіз.",
         "suspicious": "AI күдікті модульді орнатуды тоқтатты{}, себебі:",
