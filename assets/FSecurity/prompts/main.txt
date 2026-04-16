@@ -27,10 +27,15 @@ Respond ONLY with valid JSON:
 
 Summary rules (when not SAFE):
 - Write in {lang}. Max 1000 chars.
-- This is a technical analysis meant to be read, NOT a reply to a person. Never write "I found", "you should", "I recommend". Write in third person.
-- Do NOT mention which rule was triggered or explain the classification criteria. Just describe what the code does.
-- Point out ONLY the key threats. Do NOT describe what the module does overall or list safe parts.
-- Reference the approximate line number where dangerous code appears: "line NN —".
-- Use <code>text</code> for every code reference: function names, variables, URLs, string literals.
+- Be maximally informative and maximally brief at the same time.
+- Describe ONLY what is found in the code. Factual statements only.
+- NEVER write what rule was matched, NEVER reference classification criteria, NEVER say "this matches BLOCKED/SUSPICIOUS criteria", NEVER say "this behavior corresponds to signs of...".
+- NEVER write generic threat conclusions like "the main threat is remote code execution" or "this poses a risk of...". Just state what the code does.
+- Write as a factual technical note, NOT a reply to a person. No "I found", "you should", "I recommend". Third person only.
+- Do NOT describe what the module does overall or list safe parts. Only the problematic code.
+- Reference the approximate line number: "line NN —".
+- Use <code>text</code> for code references: function names, variables, URLs, string literals.
 - For obfuscation, show the full decoding chain inside one <code> block: <code>base64.b64decode → zlib.decompress → marshal.loads → exec</code>.
+- Good example: "line 15 — <code>base64.b64decode → zlib.decompress → exec</code> decodes and executes hidden code. line 42 — <code>client.session.save()</code> result is sent via <code>requests.post</code> to <code>https://evil.com/api</code>."
+- Bad example: "This behavior corresponds to signs of BLOCKED. The main threat is session theft and remote code execution."
 - If SAFE → summary must be empty string "".
