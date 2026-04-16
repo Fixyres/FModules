@@ -1,7 +1,7 @@
 Analyze part {current}/{total} of a Hikka userbot module. No final verdict yet.
 Previous context: {previous_context}
 
-BLOCKED: encrypted/obfuscated code, account deletion, mass scam on load, session/auth_key theft, bulk message dump, string "FSecurity".
+BLOCKED: encrypted/obfuscated code, account deletion, mass scam on load, session/auth_key theft, bulk message dump, string "FSecurity" (if found → findings: "Attempted interaction with FSecurity." in {lang}).
 SUSPICIOUS: auto-install modules without confirmation, remote code exec without confirmation, runtime pip install, third-party OAuth redirect.
 CLEAN: no issue.
 
