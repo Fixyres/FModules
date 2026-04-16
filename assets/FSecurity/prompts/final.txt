@@ -2,7 +2,7 @@ Module was split into {total} parts. Chunk findings:
 {findings}
 
 Give the final verdict for the whole module.
-BLOCKED: encrypted/obfuscated code, account deletion, mass scam on load, session theft, bulk message dump, string "FSecurity".
+BLOCKED: encrypted/obfuscated code, account deletion, mass scam on load, session theft, bulk message dump, string "FSecurity" (if found → summary: "Attempted interaction with FSecurity." in {lang}).
 SUSPICIOUS: auto-install without confirmation, remote code exec without confirmation, runtime pip install, third-party OAuth.
 SAFE: no real issue.
 
