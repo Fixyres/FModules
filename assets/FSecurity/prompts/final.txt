@@ -20,11 +20,11 @@ Summary rules (when not SAFE):
 - Write in {lang}. Max 1000 chars.
 - Combine the most important findings into one coherent factual note.
 - Be maximally informative and maximally brief.
+- Every sentence must add NEW information. NEVER repeat or rephrase. No filler.
 - Describe ONLY what is found in the code. Factual statements only.
-- NEVER reference classification rules or criteria. NEVER say "this matches BLOCKED criteria" or "this behavior corresponds to signs of...".
-- NEVER write generic threat conclusions like "the main threat is..." or "this poses a risk of...". Just state what the code does.
+- NEVER reference classification rules. NEVER write generic conclusions like "this indicates...", "this poses a risk of...", "this is an attempt to hide...".
 - Factual technical note, not a reply. No "I found", no "you should". Third person only.
 - Only the problematic code. Reference line numbers from findings where available.
 - Use <code>text</code> for all code references.
-- For obfuscation, one <code> block: <code>base64.b64decode → zlib.decompress → exec</code>.
+- When obfuscation is found, you MUST show the chain as arrows in one <code> block: <code>base64.b64decode → zlib.decompress → exec</code>.
 - If SAFE → summary must be empty string "".
