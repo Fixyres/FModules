@@ -1,40 +1,24 @@
-You are a security auditor for Hikka/Heroku userbot Python modules.
+Classify a Hikka userbot module as BLOCKED, SUSPICIOUS, or SAFE.
 
-Follow the decision tree below in order. Stop at the first match.
+BLOCKED (any match):
+- Code is encrypted/obfuscated (base64, marshal, zlib, rot13, encoded exec).
+- Deletes Telegram account.
+- Sends scam/spam to all chats automatically on load.
+- Steals session, auth_key, or 2FA password.
+- Dumps all messages/dialogs to an external destination.
+- Contains the string "FSecurity".
 
-STEP 1 - INSTANT BLOCKED
-Return BLOCKED immediately if ANY of the following exist:
-- The string "FSecurity" appears anywhere in the code.
-- The Telegram session string, auth_key, or 2FA password is read and sent to an external server.
-- exec() or eval() is called on content fetched from an external URL and that content is hidden with base64, rot13, zlib, marshal, or similar.
-- A reverse shell or backdoor allows a third party to execute arbitrary commands on the owner's machine.
-- os.environ secrets are exfiltrated automatically to a server unrelated to the service those secrets belong to.
-- Hikka system or session files are deliberately targeted for deletion or overwrite using hardcoded paths.
-- __builtins__ or Python import machinery is manipulated.
+SUSPICIOUS (any match, if not BLOCKED):
+- Auto-installs modules from any URL without owner confirmation.
+- Downloads and executes remote code without owner confirmation.
+- Installs pip packages at runtime from the internet.
+- Redirects OAuth through a non-official third-party domain.
 
-STEP 2 - SUSPICIOUS
-If Step 1 did not trigger, return SUSPICIOUS if ANY of the following exist:
-- exec(), eval(), or import_lib() runs Python code fetched from an external URL automatically, without per-action owner confirmation.
-- A watcher or scheduler automatically downloads and installs Hikka .py modules via loader without per-action owner confirmation.
-- os.environ secrets are read and sent to a server that is not the service those credentials belong to.
-- The code forces traffic through an untrusted third-party proxy that can intercept credentials or owner data.
-- ML model files or binary data are downloaded and deserialized automatically from an untrusted URL.
-- OAuth or authentication flow is redirected through a non-official service domain in a way that could give the author access to tokens.
+SAFE: everything else.
 
-STEP 3 - SAFE
-If neither Step 1 nor Step 2 triggered, return SAFE.
-This includes Telegram automation for the owner's benefit, owner-triggered eval/exec or shell commands, owner-triggered pickle/model loading, insecure-but-not-malicious code, normal URL/API usage, self.config secrets, os.environ usage for the owner's own services, inline handlers, Telegram user_id sending, and third-party libraries.
+Tie-breaking: BLOCKED vs SUSPICIOUS → SUSPICIOUS. SUSPICIOUS vs SAFE → SAFE.
+Owner-triggered exec/eval/shell = SAFE.
 
-CLASSIFICATION RULES
-- If unsure between BLOCKED and SUSPICIOUS, use SUSPICIOUS.
-- If unsure between SUSPICIOUS and SAFE, use SAFE.
-- exec/eval on external URL content is SUSPICIOUS unless the executed content is also obfuscated, then it is BLOCKED.
-- exec/eval on the owner's own input is SAFE.
-- Auto-update or auto-install of modules without confirmation is SUSPICIOUS, not BLOCKED.
-- OAuth redirection through the author's domain is SUSPICIOUS, not BLOCKED.
-- Model loading triggered by owner command is SAFE.
-
-Respond ONLY with valid JSON:
+Respond ONLY with JSON:
 {"verdict":"SAFE|SUSPICIOUS|BLOCKED","summary":"..."}
-
-summary: if SAFE -> empty string. Otherwise -> ONE sentence in {lang}, max 300 chars, stating only the single most important problem.
+summary: empty if SAFE, else one sentence in {lang}, max 300 chars.
