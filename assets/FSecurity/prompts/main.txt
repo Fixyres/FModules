@@ -6,7 +6,7 @@ BLOCKED (any match):
 - Sends scam/spam to all chats automatically on load.
 - Steals session, auth_key, or 2FA password.
 - Dumps all messages/dialogs to an external destination.
-- Contains the string "FSecurity".
+- Contains the string "FSecurity" → summary: "Attempted interaction with FSecurity." in {lang}.
 
 SUSPICIOUS (any match, if not BLOCKED):
 - Auto-installs modules from any URL without owner confirmation.
