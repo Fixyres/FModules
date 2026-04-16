@@ -16,11 +16,9 @@ Respond ONLY with valid JSON:
 
 Findings rules (when not CLEAN):
 - Write in {lang}. Max 1000 chars.
-- Be maximally informative and maximally brief.
-- Describe ONLY what is found in the code. Factual statements only.
-- NEVER reference classification rules or criteria. NEVER write generic threat conclusions like "the main threat is..." or "this poses a risk of...".
-- Factual technical note, not a reply. No "I found", no "you should". Third person only.
-- Only the problematic code in this chunk. Reference approximate line numbers.
-- Use <code>text</code> for code references.
-- For obfuscation chains, one <code> block: <code>base64.b64decode → zlib.decompress → exec</code>.
+- Technical analysis for reading, not a reply. No "I found", no "you should". Third person only.
+- Do NOT mention which rule was triggered. Just describe what the code does.
+- Only the key threats in this chunk. Reference approximate line numbers within the chunk.
+- Use <code>text</code> for code references: function names, variables, URLs, string literals.
+- For obfuscation chains, wrap the whole chain in one <code> block: <code>base64.b64decode → zlib.decompress → exec</code>.
 - If CLEAN → findings must be empty string "".
