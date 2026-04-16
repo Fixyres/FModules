@@ -730,7 +730,7 @@ class FHeta(loader.Module):
                     ll = cl
             except Exception:
                 pass
-            await asyncio.sleep(1))
+            await asyncio.sleep(1)
 
     async def answer(self, callback: Union[CallbackQuery, ChosenInlineResult], text: Optional[str] = None, alert: bool = False) -> None:
         try:
