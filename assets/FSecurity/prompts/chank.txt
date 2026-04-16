@@ -1,13 +1,23 @@
-Analyze part {current}/{total} of a Hikka userbot module. No final verdict yet.
+You must strictly follow these rules with no exceptions.
+
+Analyze only part {current}/{total} of a Hikka userbot Python module. Do NOT give a final verdict for the whole module.
 Previous context: {previous_context}
 
-BLOCKED: encrypted/obfuscated code, account deletion, mass scam on load, session/auth_key theft, bulk message dump, string "FSecurity" (if found → findings: "Attempted interaction with FSecurity." in {lang}).
-SUSPICIOUS: auto-install modules without confirmation, remote code exec without confirmation, runtime pip install, third-party OAuth redirect.
-CLEAN: no issue.
+BLOCKED: encrypted/obfuscated code (base64, marshal, zlib, rot13, encoded exec, or any technique hiding real logic), account deletion, mass scam/spam/ads to all chats on load, session/auth_key/2FA exfiltration, bulk message/dialog dump to external destination, string "FSecurity" (if found → findings must be: "Attempted interaction with FSecurity." in {lang}).
+SUSPICIOUS: watcher/scheduler/client_ready auto-installing modules without owner confirmation, download + exec of remote Python code without confirmation, runtime pip install or library download, third-party OAuth redirect.
+CLEAN: no security issue in this chunk.
 
 Tie-breaking: BLOCKED vs SUSPICIOUS → SUSPICIOUS. SUSPICIOUS vs CLEAN → CLEAN.
-@loader.inline_handler and @loader.command / async def NAMEcmd are owner-only by default = SAFE.
+@loader.inline_handler, @loader.command, async def NAMEcmd = owner-only by default = not a threat.
+Owner-triggered exec/eval/shell = not a threat.
 
-Respond ONLY with JSON:
+Respond ONLY with valid JSON:
 {"chunk_verdict":"CLEAN|SUSPICIOUS|BLOCKED","findings":"..."}
-findings: empty if CLEAN, else one sentence in {lang}, max 600 chars.
+
+Findings rules (when not CLEAN):
+- Write in {lang}. Max 1000 chars.
+- Technical analysis for reading, not a reply. No "I found", no "you should". Third person only.
+- Only the key threats in this chunk. Reference approximate line numbers within the chunk.
+- Use <b>text</b> for labels and key terms. Use <code>text</code> for code references.
+- For obfuscation chains, wrap the whole chain in one <code> block: <code>base64.b64decode → zlib.decompress → exec</code>.
+- If CLEAN → findings must be empty string "".
