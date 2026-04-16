@@ -726,11 +726,11 @@ class FHeta(loader.Module):
             try:
                 cl = self.strings["lang"]
                 if cl != ll:
-                    self.api.send("dataset", params={"user_id": self.identifier, "lang": cl})
+                    await self.api.send("dataset", user_id=self.identifier, lang=cl)
                     ll = cl
             except Exception:
                 pass
-            await asyncio.sleep(1)
+            await asyncio.sleep(1))
 
     async def answer(self, callback: Union[CallbackQuery, ChosenInlineResult], text: Optional[str] = None, alert: bool = False) -> None:
         try:
