@@ -1,6 +1,6 @@
 __version__ = (1, 0, 0)
 
-# meta developer: @FModules
+# meta developer: @NFModules
 # meta banner: https://raw.githubusercontent.com/Fixyres/FModules/refs/heads/main/assets/FSecurity/banner.png
 # meta fhsdesc: security, guard, antiscam, antivirus
 # scope: hikka_min 2.0.0
