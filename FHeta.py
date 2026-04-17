@@ -577,7 +577,7 @@ class FHeta(loader.Module):
             "command": '<tg-emoji emoji-id="5341715473882955310">⚙️</tg-emoji>',
             "placeholder": '<tg-emoji emoji-id="5359785904535774578">🗒️</tg-emoji>',
             "module": '<tg-emoji emoji-id="5454112830989025752">📦</tg-emoji>',
-            "channel": '<tg-emoji emoji-id="5278256077954105203">📢</tg-emoji>',
+            "channel": '📢',
             "modules_list": '<tg-emoji emoji-id="5197269100878907942">📋</tg-emoji>'
         },
         "winter": {
@@ -588,7 +588,7 @@ class FHeta(loader.Module):
             "command": '<tg-emoji emoji-id="5199503707938505333">🎅</tg-emoji>',
             "placeholder": '<tg-emoji emoji-id="5204046675236109418">🗒️</tg-emoji>',
             "module": '<tg-emoji emoji-id="5197708768091061888">🎁</tg-emoji>',
-            "channel": '<tg-emoji emoji-id="5278256077954105203">📢</tg-emoji>',
+            "channel": '📢',
             "modules_list": '<tg-emoji emoji-id="5345935030143196497">🎄</tg-emoji>'
         },
         "summer": {
@@ -599,7 +599,7 @@ class FHeta(loader.Module):
             "command": '<tg-emoji emoji-id="5442644589703866634">🏄</tg-emoji>',
             "placeholder": '<tg-emoji emoji-id="5434121252874756456">🗒️</tg-emoji>',
             "module": '<tg-emoji emoji-id="5433645645376264953">🏖️</tg-emoji>',
-            "channel": '<tg-emoji emoji-id="5278256077954105203">📢</tg-emoji>',
+            "channel": '📢',
             "modules_list": '<tg-emoji emoji-id="5472178859300363509">🏖️</tg-emoji>'
         },
         "spring": {
@@ -610,7 +610,7 @@ class FHeta(loader.Module):
             "command": '<tg-emoji emoji-id="5449850741667668411">🦋</tg-emoji>',
             "placeholder": '<tg-emoji emoji-id="5434121252874756456">🗒️</tg-emoji>',
             "module": '<tg-emoji emoji-id="5440911110838425969">🌿</tg-emoji>',
-            "channel": '<tg-emoji emoji-id="5278256077954105203">📢</tg-emoji>',
+            "channel": '📢',
             "modules_list": '<tg-emoji emoji-id="5440748683765227563">🌺</tg-emoji>'
         },
         "autumn": {
@@ -621,7 +621,7 @@ class FHeta(loader.Module):
             "command": '<tg-emoji emoji-id="5212963577098417551">🍂</tg-emoji>',
             "placeholder": '<tg-emoji emoji-id="5363965354391388799">🗒️</tg-emoji>',
             "module": '<tg-emoji emoji-id="5249157915041865558">🍄</tg-emoji>',
-            "channel": '<tg-emoji emoji-id="5278256077954105203">📢</tg-emoji>',
+            "channel": '📢',
             "modules_list": '<tg-emoji emoji-id="5305495722618010655">🍂</tg-emoji>'
         }
     }
