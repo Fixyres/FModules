@@ -1,6 +1,6 @@
 __version__ = (1, 0, 0)
 
-# meta developer: @FModules
+# meta developer: @NFModules
 
 import asyncio
 import aiohttp
