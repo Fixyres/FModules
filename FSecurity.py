@@ -226,7 +226,7 @@ class FSecurity(loader.Module):
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt},
                 ],
-                "temperature": 0.06,
+                "temperature": 0.4,
                 "max_tokens": 1000,
             },
             timeout=180,
