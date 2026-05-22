@@ -773,7 +773,11 @@ class FHeta(loader.Module):
                 else:
                     return
 
-            await self.bot.edit_message_text(**arguments)
+            try:
+                await self.bot.edit_message_text(**arguments)
+            except Exception:
+                await await self.bot.edit_message(**arguments)
+                
         except Exception:
             pass
 
