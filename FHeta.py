@@ -633,13 +633,13 @@ class FHeta(loader.Module):
             loader.ConfigValue(
                 "only_official_developers",
                 False,
-                lambda: self.strings("docdevs"),
+                lambda: self.strings["docdevs"],
                 validator=loader.validators.Boolean()
             ),
             loader.ConfigValue(
                 "theme",
                 "default",
-                lambda: self.strings("doctheme"),
+                lambda: self.strings["doctheme"],
                 validator=loader.validators.Choice(["default", "winter", "summer", "spring", "autumn"])
             )
         )
@@ -664,7 +664,7 @@ class FHeta(loader.Module):
         
         await self.request_join(
             "NFHeta_Updates",
-            f"{self.ui.emoji('channel')} {self.strings('channel')}"
+            f"{self.ui.emoji('channel')} {self.strings['channel']}"
         )
         
         self.api.token = self.token
