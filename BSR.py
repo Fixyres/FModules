@@ -42,6 +42,7 @@ async def to_code(n: int) -> str:
         n_shifted //= 31
     return "X" + "".join(reversed(res))
 
+
 @loader.tds
 class BSR(loader.Module):
     '''Module for finding nearby game rooms in BrawlStars.'''
