@@ -8,6 +8,7 @@ __version__ = (1, 0, 0)
 
 # meta banner: https://raw.githubusercontent.com/Fixyres/FModules/refs/heads/main/assets/SCD/banner.png
 # meta developer: @NFModules
+# meta fhsdesc: SoundCloud, Music, Music downloader, Downloader
 
 # requires: curl_cffi
 
