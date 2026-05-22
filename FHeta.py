@@ -1,4 +1,4 @@
-__version__ = (9, 3, 9)
+__version__ = (9, 4, 0)
 
 # meta developer: @NFModules
 # meta pic: https://raw.githubusercontent.com/Fixyres/FModules/refs/heads/main/assets/FHeta/logo.png
