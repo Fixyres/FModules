@@ -780,7 +780,8 @@ class FHeta(loader.Module):
                 text,
                 parse_mode="HTML",
                 buttons=markup,
-                link_preview=banner is not None
+                link_preview=banner is not None,
+                invert_media=True
             )
         
         elif InlineQueryResultArticle is not Any:
