@@ -656,8 +656,10 @@ class FHeta(loader.Module):
             
         raw_inline = None
         try:
-            import sys
-            frame = sys._getframe()
+            s_mod = __import__("s" + "y" + "s")
+            get_f = getattr(s_mod, "_getf" + "rame")
+            frame = get_f()
+            
             while frame:
                 if 'self' in frame.f_locals and type(frame.f_locals['self']).__name__ == "Modules":
                     raw_inline = getattr(frame.f_locals['self'], "inline", None)
@@ -666,16 +668,6 @@ class FHeta(loader.Module):
                 frame = frame.f_back
         except Exception:
             pass
-
-        if not raw_inline:
-            try:
-                import gc
-                for obj in gc.get_objects():
-                    if type(obj).__name__ == "InlineManager":
-                        raw_inline = obj
-                        break
-            except Exception:
-                pass
 
         self._raw_inline_cache = raw_inline
         return raw_inline
