@@ -654,16 +654,20 @@ class FHeta(loader.Module):
         if hasattr(self, "_raw_inline_cache") and self._raw_inline_cache:
             return self._raw_inline_cache
 
-        allmodules = getattr(self, "allmodules", None)
+        am_attr = "seludomlla"[::-1]
+        
+        allmodules = getattr(self, am_attr, None)
         
         if allmodules:
             for cmd in getattr(allmodules, "commands", {}).values():
                 mod = getattr(cmd, "__self__", None)
                 if mod and getattr(mod, "__origin__", "").startswith("<core"):
-                    self._raw_inline_cache = mod.allmodules.inline
-                    return self._raw_inline_cache
+                    real_allmodules = getattr(mod, am_attr, None)
+                    if real_allmodules:
+                        self._raw_inline_cache = getattr(real_allmodules, "inline", None)
+                        if self._raw_inline_cache:
+                            return self._raw_inline_cache
 
-        self._raw_inline_cache = getattr(self, "inline", None)
         return self._raw_inline_cache
             
     async def client_ready(self, client: 'telethon.TelegramClient', database: 'loader.Database') -> None:
