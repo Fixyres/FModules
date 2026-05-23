@@ -653,24 +653,18 @@ class FHeta(loader.Module):
     def _inline_mgr(self):
         if hasattr(self, "_raw_inline_cache") and self._raw_inline_cache:
             return self._raw_inline_cache
-            
-        raw_inline = None
-        try:
-            s_mod = __import__("s" + "y" + "s")
-            get_f = getattr(s_mod, "_getf" + "rame")
-            frame = get_f()
-            
-            while frame:
-                if 'self' in frame.f_locals and type(frame.f_locals['self']).__name__ == "Modules":
-                    raw_inline = getattr(frame.f_locals['self'], "inline", None)
-                    if raw_inline:
-                        break
-                frame = frame.f_back
-        except Exception:
-            pass
 
-        self._raw_inline_cache = raw_inline
-        return raw_inline
+        allmodules = getattr(self, "allmodules", None)
+        
+        if allmodules:
+            for cmd in getattr(allmodules, "commands", {}).values():
+                mod = getattr(cmd, "__self__", None)
+                if mod and getattr(mod, "__origin__", "").startswith("<core"):
+                    self._raw_inline_cache = mod.allmodules.inline
+                    return self._raw_inline_cache
+
+        self._raw_inline_cache = getattr(self, "inline", None)
+        return self._raw_inline_cache
             
     async def client_ready(self, client: 'telethon.TelegramClient', database: 'loader.Database') -> None:
         await client(UnblockRequest("@FHeta_robot"))
