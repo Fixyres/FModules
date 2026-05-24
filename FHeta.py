@@ -232,8 +232,17 @@ class FHetaUI:
             description = utils.escape_html(description).split('\n')[0] if description else ""
             name = utils.escape_html(item.get("name", ""))
             
-            character = '@' + self.main._inline_mgr.bot_username + ' ' if item.get('inline') else self.main.get_prefix()
-            row = f"<code>{character}{name}</code> {description}".strip()
+            if item.get('inline'):
+                character = '@' + self.main.inline.bot_username + ' '
+                display_name = name
+            elif kind == "ph":
+                character = ""
+                display_name = f"{{{name}}}"
+            else:
+                character = self.main.get_prefix()
+                display_name = name
+                
+            row = f"<code>{character}{display_name}</code> {description}".strip()
             
             extra = f"<i>{self.main.strings[more].format(remaining=len(items) - index)}</i>"
             test = "\n".join(lines + [row, extra])
@@ -245,7 +254,7 @@ class FHetaUI:
             lines.append(row)
             
         return f"\n\n{self.emoji('command' if kind == 'cmd' else 'placeholder')} <b>{self.main.strings[title]}:</b>\n<blockquote expandable>{chr(10).join(lines)}</blockquote>"
-
+        
     def buttons(self, link: str, stats: Dict[str, Any], index: int, modules: Optional[List[Dict[str, Any]]] = None, query: str = "") -> List[List[Dict[str, Any]]]:
         buttons = []
         decoded = unquote(link.replace('%20', '___SPACE___')).replace('___SPACE___', '%20')
