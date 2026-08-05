@@ -3,7 +3,7 @@ __version__ = (9, 4, 0)
 # meta developer: @NFModules
 # meta pic: https://raw.githubusercontent.com/Fixyres/FModules/refs/heads/main/assets/FHeta/logo.png
 # meta banner: https://raw.githubusercontent.com/Fixyres/FModules/refs/heads/main/assets/FHeta/logo.png
-# scope: hikka_min 2.1.0
+# scope: hikka_min 2.0.0
 
 # ©️ Fixyres, 2024-2030
 # 🌐 https://github.com/Fixyres/FModules
@@ -230,7 +230,8 @@ class FHeta(loader.Module):
         "dependency": "✘ Dependencies installation error!",
         "docdevs": "Use only modules from official Heroku developers when searching?",
         "doctheme": "Theme for emojis.",
-        "channel": "This is the channel with all updates in FHeta!"
+        "channel": "This is the channel with all updates in FHeta!",
+        "install_via_fheta": "Enable Install via FHeta?"
     }
     
     strings_ru = {
@@ -263,7 +264,8 @@ class FHeta(loader.Module):
         "dependency": "✘ Ошибка установки зависимостей!",
         "docdevs": "Использовать только модули от официальных разработчиков Heroku при поиске?",
         "doctheme": "Тема для эмодзи.",
-        "channel": "Это канал со всеми обновлениями в FHeta!"
+        "channel": "Это канал со всеми обновлениями в FHeta!",
+        "install_via_fheta": "Включить Install via FHeta?"
     }
     
     strings_ua = {
@@ -296,7 +298,8 @@ class FHeta(loader.Module):
         "dependency": "✘ Помилка встановлення залежностей!",
         "docdevs": "Використовувати тільки модулі від офіційних розробників Heroku при пошуку?",
         "doctheme": "Тема для емодзі.",
-        "channel": "Це канал з усіма оновленнями в FHeta!"
+        "channel": "Це канал з усіма оновленнями в FHeta!",
+        "install_via_fheta": "Увімкнути Install via FHeta?"
     }
     
     strings_kz = {
@@ -329,7 +332,8 @@ class FHeta(loader.Module):
         "dependency": "✘ Тәуелділіктерді орнату қатесі!",
         "docdevs": "Іздеу кезінде тек ресми Heroku әзірлеушілерінің модульдерін пайдалану керек пе?",
         "doctheme": "Эмодзилер үшін тақырып.",
-        "channel": "Бұл FHeta-дағы барлық жаңартулары бар арна!"
+        "channel": "Бұл FHeta-дағы барлық жаңартулары бар арна!",
+        "install_via_fheta": "Install via FHeta қосу керек пе?"
     }
     
     strings_uz = {
@@ -362,7 +366,8 @@ class FHeta(loader.Module):
         "dependency": "✘ Bog'liqliklarni o'rnatish xatosi!",
         "docdevs": "Qidiruv paytida faqat rasmiy Heroku ishlab chiquvchilarining modullaridan foydalanish kerakmi?",
         "doctheme": "Emojilar uchun mavзу.",
-        "channel": "Bu FHeta-dagi barcha yangilanishlari bo'lgan kanal!"
+        "channel": "Bu FHeta-dagi barcha yangilanishlari bo'lgan kanal!",
+        "install_via_fheta": "Install via FHeta yoqilsinmi?"
     }
     
     strings_fr = {
@@ -395,7 +400,8 @@ class FHeta(loader.Module):
         "dependency": "✘ Erreur d'installation des dépendances!",
         "docdevs": "Utiliser uniquement les modules des développeurs Heroku officiels lors de la recherche?",
         "doctheme": "Thème pour les emojis.",
-        "channel": "Voici le canal avec toutes les mises à jour dans FHeta!"
+        "channel": "Voici le canal avec toutes les mises à jour dans FHeta!",
+        "install_via_fheta": "Activer Install via FHeta ?"
     }
     
     strings_de = {
