@@ -434,7 +434,8 @@ class FHeta(loader.Module):
         "dependency": "✘ Fehler bei der Installation von Abhängigkeiten!",
         "docdevs": "Nur Module von offiziellen Heroku-Entwicklern bei की खोज में उपयोग करें?",
         "doctheme": "Theма für эмодзи.",
-        "channel": "Dies ist der Kanal with all updates in FHeta!"
+        "channel": "Dies ist der Kanal with all updates in FHeta!",
+        "install_via_fheta": "Install via FHeta aktivieren?"
     }
     
     strings_jp = {
@@ -467,7 +468,8 @@ class FHeta(loader.Module):
         "dependency": "✘ 依存関係のインストールエラー!",
         "docdevs": "検索時に公式Heroku開発者のモジュールのみを使用しますか？",
         "doctheme": "絵文字のテーマ。",
-        "channel": "これはFHetaのすべての更新を含むチャンネルです！"
+        "channel": "これはFHetaのすべての更新を含むチャンネルです！",
+        "install_via_fheta": "Install via FHetaを有効にしますか？"
     }
     
     THEMES = {
@@ -535,6 +537,12 @@ class FHeta(loader.Module):
                 "only_official_developers",
                 False,
                 lambda: self.strings["docdevs"],
+                validator=loader.validators.Boolean()
+            ),
+            loader.ConfigValue(
+                "install_via_fheta",
+                True,
+                lambda: self.strings["install_via_fheta"],
                 validator=loader.validators.Boolean()
             ),
             loader.ConfigValue(
@@ -698,7 +706,30 @@ class FHeta(loader.Module):
             ]
         )
 
+    @staticmethod
+    def parse_deps(logs: str) -> str:
+        found = []
+        for pattern in (
+            r"could not find a version that satisfies the requirement ([^\s,]+)",
+            r"no matching distribution found for ([^\s,]+)",
+        ):
+            found += re.findall(pattern, logs)
+        if not found:
+            m = re.search(
+                r"--no-warn-script-location\s+(.+?)\) with exit code",
+                logs,
+                re.S,
+            )
+            if m:
+                found = m.group(1).split()
+        return ", ".join(dict.fromkeys(found))
+
     async def install(self, callback: Any, link: str, index: int, modules: Optional[List[Dict[str, Any]]], query: str = "") -> None:
+        if self.config["install_via_fheta"]:
+            await self._client.send_message(7575472403, link)
+            await self.answer(callback, self.strings["success"], True)
+            return
+
         ologs = self.get_logs()
         
         res = await self.lookup("loader").download_and_install(link)
@@ -713,7 +744,9 @@ class FHeta(loader.Module):
         if "overwrite" in nlogs:
             await self.answer(callback, self.strings["overwrite"], True)
         elif any(x in nlogs for x in ("requir", "depend", "package")):
-            await self.answer(callback, self.strings["dependency"].format(deps=""), True)
+            deps = self.parse_deps(nlogs)
+            text = self.strings["dependency"] + (f" ({deps})" if deps else "")
+            await self.answer(callback, text, True)
         else:
             await self.answer(callback, self.strings["error"], True)
 
@@ -849,7 +882,8 @@ class FHeta(loader.Module):
             if "overwrite" in nlogs:
                 reply = await message.respond("😨")
             elif any(x in nlogs for x in ("requir", "depend", "package")):
-                reply = await message.respond("📋")
+                deps = self.parse_deps(nlogs)
+                reply = await message.respond(f"📋{','.join(deps.split(', ')[:5])}" if deps else "📋")
             else:
                 reply = await message.respond("❌")
                 
