@@ -725,11 +725,6 @@ class FHeta(loader.Module):
         return ", ".join(dict.fromkeys(found))
 
     async def install(self, callback: Any, link: str, index: int, modules: Optional[List[Dict[str, Any]]], query: str = "") -> None:
-        if self.config["install_via_fheta"]:
-            await self._client.send_message(7575472403, link)
-            await self.answer(callback, self.strings["success"], True)
-            return
-
         ologs = self.get_logs()
         
         res = await self.lookup("loader").download_and_install(link)
@@ -864,6 +859,9 @@ class FHeta(loader.Module):
 
     @loader.watcher(chat_id=7575472403)
     async def watcher(self, message: 'telethon.types.Message') -> None:
+        if not self.config["install_via_fheta"]:
+            return
+            
         url = message.raw_text.strip()
         
         if not url.startswith("https://api.fixyres.com/module/"):
