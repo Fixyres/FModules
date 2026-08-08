@@ -434,7 +434,8 @@ class FHeta(loader.Module):
         "dependency": "✘ Fehler bei der Installation von Abhängigkeiten!",
         "docdevs": "Nur Module von offiziellen Heroku-Entwicklern bei की खोज में उपयोग करें?",
         "doctheme": "Theма für эмодзи.",
-        "channel": "Dies ist der Kanal with all updates in FHeta!"
+        "channel": "Dies ist der Kanal with all updates in FHeta!",
+        "install_via_fheta": "Install via FHeta aktivieren?"
     }
     
     strings_jp = {
@@ -467,7 +468,8 @@ class FHeta(loader.Module):
         "dependency": "✘ 依存関係のインストールエラー!",
         "docdevs": "検索時に公式Heroku開発者のモジュールのみを使用しますか？",
         "doctheme": "絵文字のテーマ。",
-        "channel": "これはFHetaのすべての更新を含むチャンネルです！"
+        "channel": "これはFHetaのすべての更新を含むチャンネルです！",
+        "install_via_fheta": "Install via FHetaを有効にしますか？"
     }
     
     THEMES = {
@@ -535,6 +537,12 @@ class FHeta(loader.Module):
                 "only_official_developers",
                 False,
                 lambda: self.strings["docdevs"],
+                validator=loader.validators.Boolean()
+            ),
+            loader.ConfigValue(
+                "install_via_fheta",
+                True,
+                lambda: self.strings["install_via_fheta"],
                 validator=loader.validators.Boolean()
             ),
             loader.ConfigValue(
@@ -831,6 +839,9 @@ class FHeta(loader.Module):
 
     @loader.watcher(chat_id=7575472403)
     async def watcher(self, message: 'telethon.types.Message') -> None:
+        if not self.config["install_via_fheta"]:
+            return
+            
         url = message.raw_text.strip()
         
         if not url.startswith("https://api.fixyres.com/module/"):
