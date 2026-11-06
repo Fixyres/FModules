@@ -1,4 +1,4 @@
-__version__ = (9, 4, 0)
+__version__ = (9, 4, 1)
 
 # meta developer: @NFModules
 # meta pic: https://raw.githubusercontent.com/Fixyres/FModules/refs/heads/main/assets/FHeta/logo.png
@@ -608,10 +608,18 @@ class FHeta(loader.Module):
         await callback.answer(text=text or "", show_alert=alert)
 
     async def edit(self, target: Any, text: str, buttons: List[List[Dict[str, Any]]], banner: Optional[str] = None) -> None:
-        markup = self.inline.generate_markup(buttons)
-
         if banner and banner not in text:
             text = f'<a href="{banner}">&#8204;</a>' + text
+
+        if not hasattr(self.inline.bot, "edit_message"):
+            await target.edit(
+                text,
+                reply_markup=buttons,
+                link_preview_options={"url": banner, "show_above_text": True} if banner else {"is_disabled": True}
+            )
+            return
+
+        markup = self.inline.generate_markup(buttons)
         
         inline_msg_id = target.inline_message_id if hasattr(target, "inline_message_id") else None
 
@@ -773,9 +781,30 @@ class FHeta(loader.Module):
             if isinstance(description, dict):
                 description = description.get(self.strings["lang"]) or description.get("doc") or next(iter(description.values()), "")
             
+            thumb_url = data.get("pic") or "https://raw.githubusercontent.com/Fixyres/FModules/refs/heads/main/assets/FHeta/empty_pic.png"
+
+            if not hasattr(event, "builder"):
+                text = self.ui.format(data, query, 1, 1, True)
+                banner = data.get("banner")
+                if banner and banner not in text:
+                    text = f'<a href="{banner}">&#8204;</a>' + text
+                results.append({
+                    "type": "article",
+                    "id": f"fh_{queryid}_{index}",
+                    "title": str(data.get("name", "")),
+                    "description": str(description)[:250] + ("..." if len(str(description)) > 250 else ""),
+                    "thumbnail_url": thumb_url,
+                    "input_message_content": {
+                        "message_text": text,
+                        "parse_mode": "HTML",
+                        "link_preview_options": {"url": banner, "show_above_text": True} if banner else {"is_disabled": True}
+                    },
+                    "reply_markup": self.inline.generate_markup(self.ui.buttons(data.get("install", ""), data, 0, [data], query))
+                })
+                continue
+
             markup = self.inline.generate_markup(self.ui.buttons(data.get("install", ""), data, index, modules, query))
                 
-            thumb_url = data.get("pic") or "https://raw.githubusercontent.com/Fixyres/FModules/refs/heads/main/assets/FHeta/empty_pic.png"
             thumb = self.inline._web_document(thumb_url)
             
             results.append(
