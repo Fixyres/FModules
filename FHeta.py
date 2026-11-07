@@ -901,7 +901,7 @@ class FHeta(loader.Module):
             
         url = message.raw_text.strip()
         
-        if not url.startswith("https://api.fixyres.com/module/"):
+        if not url.startswith("https://api.fixyres.com/module/") or url.split("?")[0].endswith(".hmod"):
             return
             
         ologs = self.get_logs()
