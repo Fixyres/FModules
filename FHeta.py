@@ -14,6 +14,7 @@ __version__ = (9, 4, 1)
 
 import asyncio
 import aiohttp
+import base64
 import re
 import uuid
 import inspect
@@ -558,6 +559,8 @@ class FHeta(loader.Module):
             await self.api.session.close()
         if hasattr(self, "inline") and hasattr(self.inline, "unregister_bot_update_handler"):
             self.inline.unregister_bot_update_handler("fheta_chosen")
+        if getattr(self, "_chosen_client", None) is not None:
+            self._chosen_client.remove_event_handler(self.chosen_raw)
             
     async def client_ready(self, client: 'telethon.TelegramClient', database: 'loader.Database') -> None:
         await client(UnblockRequest("@FHeta_robot"))
@@ -583,6 +586,8 @@ class FHeta(loader.Module):
                 if isinstance(event, telethon.tl.types.UpdateBotInlineSend) and getattr(event, "id", "").startswith("fh_"):
                     await self.chosen(event)
             self.inline.register_bot_update_handler("fheta_chosen", "chosen_inline_result", fheta_chosen)
+        else:
+            self.watch()
 
         if self.token and not await self.api.fetch("validatetkn", user_id=str(self.identifier)):
             self.token = None
@@ -651,6 +656,15 @@ class FHeta(loader.Module):
         banner = data.get("banner")
         if banner and banner not in text:
             text = f'<a href="{banner}">&#8204;</a>' + text
+        if not hasattr(self.inline.bot, "edit_message"):
+            await self.inline.bot.edit_message_text(
+                text,
+                inline_message_id=base64.urlsafe_b64encode(bytes(event.msg_id)[4:]).decode().rstrip("="),
+                parse_mode="HTML",
+                reply_markup=self.inline.generate_markup(buttons),
+                link_preview_options={"url": banner, "show_above_text": True} if banner else {"is_disabled": True}
+            )
+            return
         await self.inline.bot.edit_message(
             event.msg_id,
             None,
@@ -660,6 +674,19 @@ class FHeta(loader.Module):
             link_preview=banner is not None,
             invert_media=banner is not None
         )
+
+    def watch(self) -> None:
+        client = getattr(self.inline, "_bot_client", None)
+        if client is None or client is getattr(self, "_chosen_client", None):
+            return
+        if getattr(self, "_chosen_client", None) is not None:
+            self._chosen_client.remove_event_handler(self.chosen_raw)
+        client.add_event_handler(self.chosen_raw, telethon.events.Raw(types=telethon.tl.types.UpdateBotInlineSend))
+        self._chosen_client = client
+
+    async def chosen_raw(self, event: Any) -> None:
+        if str(getattr(event, "id", "")).startswith("fh_") and getattr(event, "msg_id", None) is not None:
+            await self.chosen(event)
 
     async def show(self, callback: Any, index: int, modules: List[Dict[str, Any]], query: str) -> None:
         await self.answer(callback)
@@ -784,6 +811,7 @@ class FHeta(loader.Module):
             thumb_url = data.get("pic") or "https://raw.githubusercontent.com/Fixyres/FModules/refs/heads/main/assets/FHeta/empty_pic.png"
 
             if not hasattr(event, "builder"):
+                self.watch()
                 text = self.ui.format(data, query, 1, 1, True)
                 banner = data.get("banner")
                 if banner and banner not in text:
