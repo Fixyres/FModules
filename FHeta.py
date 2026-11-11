@@ -26,6 +26,12 @@ import telethon
 from .. import loader, utils
 from herokutl.tl.functions.contacts import UnblockRequest
 
+try:
+    import ataraxiatl
+    PLATFORM = "ataraxia"
+except ImportError:
+    PLATFORM = "heroku"
+
 
 class FHetaAPI:
     def __init__(self) -> None:
@@ -789,7 +795,7 @@ class FHeta(loader.Module):
                 "thumb": "https://raw.githubusercontent.com/Fixyres/FModules/refs/heads/main/assets/FHeta/try_other_query.png"
             }
         
-        modules = await self.api.fetch("search", query=query, inline="true", token=self.token, user_id=self.identifier, ood=str(self.config["only_official_developers"]).lower())
+        modules = await self.api.fetch("search", query=query, inline="true", token=self.token, user_id=self.identifier, ood=str(self.config["only_official_developers"]).lower(), platform=PLATFORM)
         
         if not modules or not isinstance(modules, list):
             return {
@@ -870,7 +876,7 @@ class FHeta(loader.Module):
 
         message = await utils.answer(message, f"{self.ui.emoji('search')} <b>{self.strings['search'].format(query=f'<code>{utils.escape_html(query)}</code>')}</b>")
         
-        modules = await self.api.fetch("search", query=query, inline="false", token=self.token, user_id=self.identifier, ood=str(self.config["only_official_developers"]).lower())
+        modules = await self.api.fetch("search", query=query, inline="false", token=self.token, user_id=self.identifier, ood=str(self.config["only_official_developers"]).lower(), platform=PLATFORM)
         
         if not modules or not isinstance(modules, list):
             return await utils.answer(message, f"{self.ui.emoji('error')} <b>{self.strings['notfound'].format(query=f'<code>{utils.escape_html(query)}</code>')}</b>")
